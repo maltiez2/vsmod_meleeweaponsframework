@@ -1,21 +1,47 @@
-﻿using System;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace ProjectileWeaponsFramework;
 
+/// <summary>
+/// Represents <see cref="EnumEntityAction"/> status for a on client side for the player running this client.
+/// </summary>
 public enum ActionState
 {
+    /// <summary>
+    /// Action is 'off', called every tick
+    /// </summary>
     Inactive,
+    /// <summary>
+    /// Action was started this tick
+    /// </summary>
     Pressed,
+    /// <summary>
+    /// Action is 'on', called every tick
+    /// </summary>
     Active,
+    /// <summary>
+    /// Action was active for more than <see cref="ActionListener.HoldDuration"/> this tick once
+    /// </summary>
     Hold,
+    /// <summary>
+    /// Action was stopped this tick
+    /// </summary>
     Released
 }
 
+/// <summary>
+/// Represents event that can be triggered by <see cref="ActionListener"/> when action is in specified state
+/// </summary>
 public readonly struct ActionEventId
 {
+    /// <summary>
+    /// Action this event is related to
+    /// </summary>
     public readonly EnumEntityAction Action;
+    /// <summary>
+    /// Action status
+    /// </summary>
     public readonly ActionState State;
 
     public ActionEventId(EnumEntityAction action, ActionState state)
@@ -25,9 +51,18 @@ public readonly struct ActionEventId
     }
 }
 
+/// <summary>
+/// Represents data that is passed to <see cref="ActionListener"/> subscribers on action
+/// </summary>
 public readonly struct ActionEventData
 {
+    /// <summary>
+    /// Action and its status
+    /// </summary>
     public readonly ActionEventId Action;
+    /// <summary>
+    /// Current active actions
+    /// </summary>
     public readonly IEnumerable<EnumEntityAction> Modifiers;
 
     public ActionEventData(ActionEventId action, IEnumerable<EnumEntityAction> modifiers)
@@ -37,8 +72,16 @@ public readonly struct ActionEventData
     }
 }
 
+/// <summary>
+/// Listen for action change status events, tracks action states and calls subscriptions on specified action in specified state
+/// </summary>
 public sealed class ActionListener : IDisposable
 {
+    /// <summary>
+    /// Time before action is considered to be in <see cref="ActionState.Hold"/> state
+    /// </summary>
+    public TimeSpan HoldDuration { get; set; } = TimeSpan.FromSeconds(0.5);
+
     public ActionListener(ICoreClientAPI api)
     {
         _clientApi = api;
@@ -51,6 +94,12 @@ public sealed class ActionListener : IDisposable
         }
     }
 
+    /// <summary>
+    /// Determines whether the specified action is currently 'on', i.e. in <see cref="ActionState.Pressed"/>, <see cref="ActionState.Active"/> or <see cref="ActionState.Hold"/> state.
+    /// </summary>
+    /// <param name="action">The action to check.</param>
+    /// <param name="asModifier">Specifies if the action is being used as a modifier, i.e. should account for "separateCtrlKeyForMouse" setting</param>
+    /// <returns>True if the action is active, false otherwise.</returns>
     public bool IsActive(EnumEntityAction action, bool asModifier)
     {
         if (asModifier && _modifiers.Contains(action) && !_clientApi.Settings.Bool.Get("separateCtrlKeyForMouse"))
@@ -62,10 +111,20 @@ public sealed class ActionListener : IDisposable
             return IsActive(action);
         }
     }
+    /// <summary>
+    /// Determines whether the specified action is currently 'on', i.e. in <see cref="ActionState.Pressed"/>, <see cref="ActionState.Active"/> or <see cref="ActionState.Hold"/> state. Not affected by "separateCtrlKeyForMouse" setting.
+    /// </summary>
+    /// <param name="action">The action to check.</param>
+    /// <returns>True if the action is active, false otherwise.</returns>
     public bool IsActive(EnumEntityAction action)
     {
         return _actionStates[action] != ActionState.Inactive && _actionStates[action] != ActionState.Released;
     }
+    /// <summary>
+    /// Subscribes to specified action being in specified state.
+    /// </summary>
+    /// <param name="action">Action and its state that will trigger the event.</param>
+    /// <param name="callback">The callback method to be invoked when the event occurs.</param>
     public void Subscribe(ActionEventId action, Action<ActionEventData> callback)
     {
         if (!_subscriptions.ContainsKey(action))
@@ -74,23 +133,18 @@ public sealed class ActionListener : IDisposable
         }
 
         _subscriptions[action].Add(callback);
-        _actionsToTrack.Add(action.Action);
     }
+    /// <summary>
+    /// Unsubscribes from InputAPI events
+    /// </summary>
     public void Dispose()
     {
         _clientApi.Input.InWorldAction -= OnEntityAction;
     }
 
-
     private readonly Dictionary<ActionEventId, List<Action<ActionEventData>>> _subscriptions = new();
-    private readonly HashSet<EnumEntityAction> _actionsToTrack = new();
-
     private readonly Dictionary<EnumEntityAction, long> _timers = new();
     private readonly Dictionary<EnumEntityAction, ActionState> _actionStates = new();
-
-    private readonly ICoreClientAPI _clientApi;
-    private readonly TimeSpan _holdDuration = TimeSpan.FromSeconds(0.5);
-
     private readonly Dictionary<EnumEntityAction, EnumEntityAction> _modifiersRemapping = new()
     {
         { EnumEntityAction.ShiftKey, EnumEntityAction.Sneak },
@@ -101,17 +155,16 @@ public sealed class ActionListener : IDisposable
         EnumEntityAction.ShiftKey,
         EnumEntityAction.CtrlKey,
     };
+    private readonly ICoreClientAPI _clientApi;
 
     private void OnEntityAction(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
-        if (!_actionsToTrack.Contains(action)) return;
-
         _actionStates[action] = SwitchState(action, on);
 
         switch (_actionStates[action])
         {
             case ActionState.Pressed:
-                _clientApi.World.RegisterCallback(_ => OnHoldTimer(action), (int)_holdDuration.TotalMilliseconds);
+                _clientApi.World.RegisterCallback(_ => OnHoldTimer(action), (int)HoldDuration.TotalMilliseconds);
                 break;
             case ActionState.Released:
             case ActionState.Inactive:
@@ -133,7 +186,23 @@ public sealed class ActionListener : IDisposable
     }
     private void CallSubscriptions(EnumEntityAction action)
     {
-        ActionEventId id = new(action, _actionStates[action]);
+        ActionState state = _actionStates[action];
+
+        CallSubscriptionsForState(action, state);
+
+        if (_actionStates[action] == ActionState.Hold || _actionStates[action] == ActionState.Pressed)
+        {
+            CallSubscriptionsForState(action, ActionState.Active);
+        }
+
+        if (_actionStates[action] == ActionState.Released)
+        {
+            CallSubscriptionsForState(action, ActionState.Inactive);
+        }
+    }
+    private void CallSubscriptionsForState(EnumEntityAction action, ActionState state)
+    {
+        ActionEventId id = new(action, state);
         ActionEventData eventData = new(id, _modifiers.Where(IsActive));
         foreach (Action<ActionEventData> callback in _subscriptions[id])
         {
@@ -158,6 +227,4 @@ public sealed class ActionListener : IDisposable
             _ => ActionState.Inactive
         };
     }
-
-    
 }
