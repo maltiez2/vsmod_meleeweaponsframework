@@ -1,0 +1,3 @@
+[submodule "vsmod_AnimationManagerLib"]
+	path = vsmod_AnimationManagerLib
+	url = https://github.com/maltiez2/vsmod_AnimationManagerLib
