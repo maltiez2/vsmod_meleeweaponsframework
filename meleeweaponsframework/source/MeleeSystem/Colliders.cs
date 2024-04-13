@@ -8,13 +8,13 @@ using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-public interface IHasLineCollider
+internal interface IHasLineCollider
 {
     LineSegmentCollider RelativeCollider { get; }
     LineSegmentCollider InWorldCollider { get; set; }
 }
 
-public interface ICollider
+internal interface ICollider
 {
     void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = ColorUtil.WhiteArgb);
     bool RoughIntersect(Cuboidf collisionBox);
@@ -23,7 +23,7 @@ public interface ICollider
     (Block, Vector3)? IntersectTerrain(ICoreClientAPI api);
 }
 
-public readonly struct LineSegmentCollider : ICollider
+internal readonly struct LineSegmentCollider : ICollider
 {
     public readonly Vector3 Position;
     public readonly Vector3 Direction;

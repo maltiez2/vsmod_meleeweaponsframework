@@ -7,24 +7,24 @@ using Vintagestory.API.Server;
 namespace MeleeWeaponsFramework;
 
 [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-public struct MeleeAttackPacket
+internal struct MeleeAttackPacket
 {
     public bool RightHand { get; set; }
     public MeleeAttackDamagePacket[] MeleeAttackDamagePackets { get; set; }
 }
 
-public abstract class MeleeSystem
+internal abstract class MeleeSystem
 {
     public const string NetworkChannelId = "melee-weapons-framework:damage-packets";
 }
 
-public readonly struct AttackId
+internal readonly struct AttackId
 {
     public readonly int ItemId;
     public readonly int Id;
 }
 
-public sealed class MeleeSystemClient : MeleeSystem
+internal sealed class MeleeSystemClient : MeleeSystem
 {
     public MeleeSystemClient(ICoreClientAPI api)
     {
@@ -92,11 +92,11 @@ public sealed class MeleeSystemClient : MeleeSystem
             SendPacket(rightHand, damagePackets);
         }
 
-        callback.Invoke(result);
+        if (result.Result != AttackResultFlag.None) callback.Invoke(result);
     }
 }
 
-public sealed class MeleeSystemServer : MeleeSystem
+internal sealed class MeleeSystemServer : MeleeSystem
 {
     public MeleeSystemServer(ICoreServerAPI api)
     {
@@ -140,12 +140,13 @@ public sealed class MeleeSystemServer : MeleeSystem
                 continue;
             }
 
-            damageType.Attack(player.Entity, targetEntity);
+            damageType.Attack(player.Entity, targetEntity); // @TODO: check distance and reach first
 
             if (damageType.DurabilityDamage > 0)
             {
                 ItemSlot itemSlot = packet.RightHand ? player.Entity.RightHandItemSlot : player.Entity.LeftHandItemSlot;
                 itemSlot.Itemstack.Collectible.DamageItem(_api.World, player.Entity, itemSlot, damageType.DurabilityDamage);
+                itemSlot.MarkDirty();
             }
         }
     }
