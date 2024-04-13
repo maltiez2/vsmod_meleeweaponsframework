@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "meleeweaponsframework", "meleeweaponsframework\meleeweaponsframework.csproj", "{008DF2E4-20AD-4095-8A66-D720A4A95BD4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnimationManager", "vsmod_AnimationManagerLib\AnimationManager\AnimationManager.csproj", "{2B4789F8-3EC0-49F7-924A-D20D6AA376A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{008DF2E4-20AD-4095-8A66-D720A4A95BD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{008DF2E4-20AD-4095-8A66-D720A4A95BD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{008DF2E4-20AD-4095-8A66-D720A4A95BD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B4789F8-3EC0-49F7-924A-D20D6AA376A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B4789F8-3EC0-49F7-924A-D20D6AA376A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B4789F8-3EC0-49F7-924A-D20D6AA376A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B4789F8-3EC0-49F7-924A-D20D6AA376A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
