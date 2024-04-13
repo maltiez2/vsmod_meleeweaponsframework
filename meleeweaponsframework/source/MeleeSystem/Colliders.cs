@@ -8,7 +8,6 @@ using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-
 public interface IHasLineCollider
 {
     LineSegmentCollider RelativeCollider { get; }
