@@ -1,7 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
-namespace ProjectileWeaponsFramework;
+namespace MeleeWeaponsFramework;
 
 /// <summary>
 /// Represents <see cref="EnumEntityAction"/> status for a on client side for the player running this client.
