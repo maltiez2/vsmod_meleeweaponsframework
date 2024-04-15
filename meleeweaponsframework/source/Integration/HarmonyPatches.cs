@@ -5,7 +5,7 @@ using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-public static class HarmonyPatches
+internal static class HarmonyPatches
 {
     public static float FpHandsOffset { get; set; } = DefaultFpHandsOffset;
     public const float DefaultFpHandsOffset = -0.3f;

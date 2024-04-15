@@ -5,12 +5,20 @@ using Vintagestory.API.Server;
 
 namespace MeleeWeaponsFramework;
 
-public class MeleeWeaponsFramework : ModSystem
+public class MeleeWeaponsFrameworkModSystem : ModSystem
 {
     public override void StartClientSide(ICoreClientAPI api)
     {
         _meleeSystemClient = new(api);
         _actionListener = new(api);
+
+        _cursorRenderer = new(api);
+        _directionController = new(api, _cursorRenderer);
+        api.Event.RegisterRenderer(_cursorRenderer, EnumRenderStage.Ortho);
+
+        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
+
+        api.World.RegisterGameTickListener((dt) => _directionController.OnGameTick(), 0, 2000);
 
         new Harmony("meleeweaponsframework").PatchAll();
     }
@@ -27,8 +35,13 @@ public class MeleeWeaponsFramework : ModSystem
 
     internal MeleeSystemClient? MeleeSystemClient => _meleeSystemClient;
     internal ActionListener? ActionListener => _actionListener;
+    internal MeleeSystemServer? MeleeSystemServer => _meleeSystemServer;
+    internal DirectionCursorRenderer? CursorRenderer => _cursorRenderer;
+    internal AttackDirectionController? DirectionController => _directionController;
 
     private MeleeSystemClient? _meleeSystemClient;
     private ActionListener? _actionListener;
     private MeleeSystemServer? _meleeSystemServer;
+    private DirectionCursorRenderer? _cursorRenderer;
+    private AttackDirectionController? _directionController;
 }

@@ -203,8 +203,11 @@ public sealed class ActionListener : IDisposable
     private void CallSubscriptionsForState(EnumEntityAction action, ActionState state)
     {
         ActionEventId id = new(action, state);
+
+        if (!_subscriptions.TryGetValue(id, out List<Action<ActionEventData>>? value)) return;
+        
         ActionEventData eventData = new(id, _modifiers.Where(IsActive));
-        foreach (Action<ActionEventData> callback in _subscriptions[id])
+        foreach (Action<ActionEventData> callback in value)
         {
             callback.Invoke(eventData);
         }

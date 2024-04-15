@@ -1,0 +1,97 @@
+﻿using AnimationManagerLib.API;
+using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+
+namespace MeleeWeaponsFramework;
+
+public readonly struct PlayerAnimationData
+{
+    public readonly AnimationId TpHands;
+    public readonly AnimationId FpHands;
+    public readonly AnimationId TpLegs;
+    public readonly AnimationId FpLegs;
+
+    public const float DefaultHandsCategoryWeight = 512f;
+    public const float DefaultLegsCategoryWeight = 16f;
+
+    /// <summary>
+    /// Registers animations for player model and stores ids for future use.
+    /// </summary>
+    /// <param name="code">Prefix for animation code, animation should be named like '{code}-{fp/tp}-{hands/legs}'</param>
+    /// <param name="system"></param>
+    /// <param name="easeInFrame">Frame used in <see cref="Start(Entity, IAnimationManagerSystem, TimeSpan)"/> method for EaseIn animation that is used by <see cref="MeleeWeaponPlayerBehavior"/> for Idle and Ready animations.</param>
+    public PlayerAnimationData(string code, IAnimationManagerSystem system, float easeInFrame = 0f)
+    {
+        string tpHandsCode = $"{code}-tp-hands";
+        string fpHandsCode = $"{code}-fp-hands";
+        string tpLegsCode = $"{code}-tp-legs";
+        string fpLegsCode = $"{code}-fp-legs";
+
+        TpHands = new("MeleeWeaponsFramework:TpHands", tpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
+        FpHands = new("MeleeWeaponsFramework:FpHands", fpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
+        TpLegs = new("MeleeWeaponsFramework:TpLegs", tpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
+        FpLegs = new("MeleeWeaponsFramework:FpLegs", fpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
+
+        AnimationData tpHandsData = AnimationData.Player(tpHandsCode);
+        AnimationData fpHandsData = AnimationData.Player(fpHandsCode);
+        AnimationData tpLegsData = AnimationData.Player(tpLegsCode);
+        AnimationData fpLegsData = AnimationData.Player(fpLegsCode);
+
+        system.Register(FpLegs, fpLegsData);
+        system.Register(FpHands, fpHandsData);
+        system.Register(TpLegs, tpLegsData);
+        system.Register(TpHands, tpHandsData);
+
+        _frame = easeInFrame;
+    }
+
+    /// <summary>
+    /// Eases in animations on frame specified on construction.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="easeInTime"></param>
+    public void Start(Entity entity, IAnimationManagerSystem system, TimeSpan easeInTime)
+    {
+        RunParameters parameters = RunParameters.EaseIn(easeInTime, _frame, ProgressModifierType.Sin);
+
+        Start(entity, system, parameters);
+    }
+    /// <summary>
+    /// Runs animations with specified parameters.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="parameters"></param>
+    public void Start(Entity entity, IAnimationManagerSystem system, RunParameters parameters)
+    {
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpHands, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpHands, parameters), synchronize: false);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpLegs, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpLegs, parameters), synchronize: false);
+    }
+    /// <summary>
+    /// Eases out animations.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="easeOutTime"></param>
+    public void Stop(Entity entity, IAnimationManagerSystem system, TimeSpan easeOutTime)
+    {
+        RunParameters parameters = RunParameters.EaseOut(easeOutTime, ProgressModifierType.Sin);
+
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpHands, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpHands, parameters), synchronize: false);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpLegs, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpLegs, parameters), synchronize: false);
+    }
+
+    /// <summary>
+    /// Returns animation data for animation with 'empty-{fp/tp}-{hands/legs}' code and '0' ease in frame.
+    /// </summary>
+    /// <param name="system"></param>
+    /// <returns></returns>
+    public static PlayerAnimationData Empty(IAnimationManagerSystem system) => new("empty", system);
+
+    private readonly float _frame = 0f;
+}
