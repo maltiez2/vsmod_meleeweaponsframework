@@ -35,7 +35,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         if (frameworkSystem.ActionListener is null || frameworkSystem.DirectionController is null)
         {
-            throw new ArgumentException($"Action listener is null, it may be caused by instantiating this behavior to early");
+            throw new ArgumentException($"Action listener or direction controller is null, it may be caused by instantiating this behavior to early");
         }
 
         _actionListener = frameworkSystem.ActionListener;
@@ -52,9 +52,9 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     {
         if (!_mainPlayer) return;
         
-        _ = CheckIfItemsInHandsChanged();
         SetRenderDirectionCursorForMainHand();
         _directionController.OnGameTick();
+        _ = CheckIfItemsInHandsChanged();
     }
 
     /// <summary>
@@ -107,6 +107,8 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private readonly ActionListener _actionListener;
     private readonly AttackDirectionController _directionController;
 
+    private MeleeWeaponItem? _currentMainHandWeapon;
+    private MeleeWeaponItem? _currentOffHandWeapon;
     private int _currentMainHandItemId = -1;
     private int _currentOffHandItemId = -1;
     private long _idleTimer = -1;
@@ -194,6 +196,9 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     {
         _currentMainHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
 
+        _currentMainHandWeapon?.OnDeselected(_player);
+        _currentMainHandWeapon = null;
+
         foreach (string stat in _currentMainHandPlayerStats)
         {
             _player.Stats.Remove(_statCategory, stat);
@@ -205,12 +210,16 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
         weapon.OnSelected(_player.ActiveHandItemSlot, _player);
+        _currentMainHandWeapon = weapon;
 
         ResetIdleTimer();
     }
     private void ProcessOffHandItemChanged()
     {
         _currentOffHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
+
+        _currentOffHandWeapon?.OnDeselected(_player);
+        _currentOffHandWeapon = null;
 
         foreach (string stat in _currentOffHandPlayerStats)
         {
@@ -223,6 +232,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
         weapon.OnSelected(_player.LeftHandItemSlot, _player);
+        _currentOffHandWeapon = weapon;
 
         ResetIdleTimer();
     }
@@ -248,7 +258,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             return;
         }
 
-        _directionController.DirectionsConfiguration = weapon.DirectionsConfiguration;
+        _directionController.DirectionsConfiguration = weapon.DirectionsType;
     }
     private void PlayIdleAnimation()
     {

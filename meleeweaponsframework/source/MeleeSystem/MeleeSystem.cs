@@ -7,24 +7,24 @@ using Vintagestory.API.Server;
 namespace MeleeWeaponsFramework;
 
 [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-internal struct MeleeAttackPacket
+public struct MeleeAttackPacket
 {
     public bool RightHand { get; set; }
     public MeleeAttackDamagePacket[] MeleeAttackDamagePackets { get; set; }
 }
 
-internal abstract class MeleeSystem
+public abstract class MeleeSystem
 {
     public const string NetworkChannelId = "melee-weapons-framework:damage-packets";
 }
 
-internal readonly struct AttackId
+public readonly struct AttackId
 {
     public readonly int ItemId;
     public readonly int Id;
 }
 
-internal sealed class MeleeSystemClient : MeleeSystem
+public sealed class MeleeSystemClient : MeleeSystem
 {
     public MeleeSystemClient(ICoreClientAPI api)
     {
@@ -96,7 +96,7 @@ internal sealed class MeleeSystemClient : MeleeSystem
     }
 }
 
-internal sealed class MeleeSystemServer : MeleeSystem
+public sealed class MeleeSystemServer : MeleeSystem
 {
     public MeleeSystemServer(ICoreServerAPI api)
     {

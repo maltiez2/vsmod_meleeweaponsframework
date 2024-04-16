@@ -9,7 +9,7 @@ using Vintagestory.API.Util;
 namespace MeleeWeaponsFramework;
 
 [Flags]
-internal enum AttackResultFlag
+public enum AttackResultFlag
 {
     None = 0,
     HitEntity = 1,
@@ -17,7 +17,7 @@ internal enum AttackResultFlag
     Finished = 4
 }
 
-internal readonly struct AttackResult
+public readonly struct AttackResult
 {
     public readonly AttackResultFlag Result;
     public readonly IEnumerable<(Block block, Vector3 point)> Terrain = Array.Empty<(Block block, Vector3 point)>();
@@ -31,7 +31,7 @@ internal readonly struct AttackResult
     }
 }
 
-internal sealed class MeleeAttack
+public sealed class MeleeAttack
 {
     public int Id { get; }
     public int ItemId { get; }
@@ -187,7 +187,7 @@ internal sealed class MeleeAttack
 
 }
 
-internal sealed class CollisionEffects
+public sealed class CollisionEffects
 {
     public Dictionary<string, AssetLocation> EntityCollisionSounds { get; set; } = new();
     public Dictionary<string, AssetLocation> TerrainCollisionSounds { get; set; } = new();

@@ -7,7 +7,7 @@ using Vintagestory.API.MathTools;
 
 namespace MeleeWeaponsFramework;
 
-internal readonly struct MeleeAttackDamageId
+public readonly struct MeleeAttackDamageId
 {
     public readonly int ItemId;
     public readonly int AttackId;
@@ -15,7 +15,7 @@ internal readonly struct MeleeAttackDamageId
 }
 
 [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-internal struct MeleeAttackDamagePacket
+public struct MeleeAttackDamagePacket
 {
     public MeleeAttackDamageId Id { get; set; }
     public Vector3 Position { get; set; }
@@ -23,7 +23,7 @@ internal struct MeleeAttackDamagePacket
     public long TargetEntityId { get; set; }
 }
 
-internal struct MeleeAttackDamageType : IHasLineCollider
+public struct MeleeAttackDamageType : IHasLineCollider
 {
     public MeleeAttackDamageId Id { get; }
     public LineSegmentCollider RelativeCollider { get; set; }
