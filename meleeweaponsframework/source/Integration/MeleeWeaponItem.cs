@@ -1,6 +1,19 @@
-﻿using Vintagestory.API.Common;
+﻿using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 
 namespace MeleeWeaponsFramework;
+
+
+[AttributeUsage(AttributeTargets.Method)]
+public class ActionEventHandlerAttribute : Attribute
+{
+    public ActionEventId Event { get; }
+
+    public ActionEventHandlerAttribute(EnumEntityAction action, ActionState state)
+    {
+        Event = new(action, state);
+    }
+}
 
 public abstract class MeleeWeaponItem : Item
 {
@@ -13,6 +26,16 @@ public abstract class MeleeWeaponItem : Item
     {
         base.OnLoaded(api);
 
+
+    }
+
+    public virtual void OnSelected(ItemSlot slot, EntityPlayer player)
+    {
+
+    }
+
+    public virtual void OnRegistered(MeleeWeaponPlayerBehavior behavior, ICoreClientAPI api)
+    {
 
     }
 }

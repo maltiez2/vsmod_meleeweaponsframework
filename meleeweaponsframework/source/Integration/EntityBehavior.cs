@@ -1,15 +1,17 @@
 ﻿using AnimationManagerLib;
 using AnimationManagerLib.API;
+using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Util;
 
 namespace MeleeWeaponsFramework;
 
-internal class MeleeWeaponPlayerBehavior : EntityBehavior
+public class MeleeWeaponPlayerBehavior : EntityBehavior
 {
-    public TimeSpan AnimationsEaseOutTime = TimeSpan.FromMilliseconds(500);
-    public TimeSpan DefaultIdleAnimationDelay = TimeSpan.FromSeconds(5);
+    public TimeSpan AnimationsEaseOutTime { get; set; } = TimeSpan.FromMilliseconds(500);
+    public TimeSpan DefaultIdleAnimationDelay { get; set; } = TimeSpan.FromSeconds(5);
 
     public delegate void ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand);
 
@@ -38,21 +40,16 @@ internal class MeleeWeaponPlayerBehavior : EntityBehavior
 
         _actionListener = frameworkSystem.ActionListener;
         _animationSystem = _api.ModLoader.GetModSystem<AnimationManagerLibSystem>();
+
+        if (_mainPlayer)
+        {
+            RegisterWeapons();
+        }
     }
     public override string PropertyName() => _statCategory;
     public override void OnGameTick(float deltaTime)
     {
         if (_mainPlayer) _ = CheckIfItemsInHandsChanged();
-    }
-
-    public void RegisterWeapon(MeleeWeaponItem weapon, Dictionary<ActionEventId, ActionEventCallbackDelegate> callbacks)
-    {
-        int itemId = weapon.ItemId;
-
-        foreach ((ActionEventId eventId, ActionEventCallbackDelegate callback) in callbacks)
-        {
-            _actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
-        }
     }
 
     /// <summary>
@@ -110,6 +107,46 @@ internal class MeleeWeaponPlayerBehavior : EntityBehavior
     private int _mainHandState = 0;
     private int _offHandState = 0;
 
+    private void RegisterWeapons()
+    {
+        _api.World.Items
+            .OfType<MeleeWeaponItem>()
+            .Foreach(RegisterWeapon);
+    }
+    private void RegisterWeapon(MeleeWeaponItem? weapon)
+    {
+        if (weapon is null) return;
+        
+        Dictionary<ActionEventId, ActionEventCallbackDelegate> handlers = CollectHandlers(weapon);
+
+        int itemId = weapon.ItemId;
+
+        foreach ((ActionEventId eventId, ActionEventCallbackDelegate callback) in handlers)
+        {
+            _actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
+        }
+
+        weapon.OnRegistered(this, _api);
+    }
+    private static Dictionary<ActionEventId, ActionEventCallbackDelegate> CollectHandlers(object owner)
+    {
+        IEnumerable<MethodInfo> methods = owner.GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Where(method => method.GetCustomAttributes(typeof(ActionEventHandlerAttribute), true).Any());
+
+        Dictionary<ActionEventId, ActionEventCallbackDelegate> handlers = new();
+        foreach (MethodInfo method in methods)
+        {
+            if (method.GetCustomAttributes(typeof(ActionEventHandlerAttribute), true)[0] is not ActionEventHandlerAttribute attribute) continue;
+
+            if (Delegate.CreateDelegate(typeof(ActionEventCallbackDelegate), owner, method) is not ActionEventCallbackDelegate handler)
+            {
+                throw new InvalidOperationException($"Handler should have same signature as 'ActionEventCallbackDelegate' delegate.");
+            }
+
+            handlers.Add(attribute.Event, handler);
+        }
+
+        return handlers;
+    }
     private void HandleActionEvent(ActionEventData eventData, int itemId, ActionEventCallbackDelegate callback)
     {
         int mainHandId = _player.ActiveHandItemSlot.Itemstack?.Id ?? -1;
