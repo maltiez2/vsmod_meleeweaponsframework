@@ -18,8 +18,6 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
 
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
 
-        api.World.RegisterGameTickListener((dt) => _directionController.OnGameTick(), 0, 2000);
-
         new Harmony("meleeweaponsframework").PatchAll();
     }
 

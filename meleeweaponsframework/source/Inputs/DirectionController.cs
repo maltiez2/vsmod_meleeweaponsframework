@@ -7,11 +7,24 @@ namespace MeleeWeaponsFramework;
 
 public enum DirectionsConfiguration
 {
+    None = 1,
     TopBottom = 2,
     Triangle = 3,
     Square = 4,
     Star = 5,
     Eight = 8
+}
+
+public enum AttackDirection
+{
+    Top,
+    TopRight,
+    Right,
+    BottomRight,
+    Bottom,
+    BottomLeft,
+    Left,
+    TopLeft
 }
 
 public readonly struct MouseMovementData
@@ -35,8 +48,8 @@ public sealed class AttackDirectionController
     public DirectionsConfiguration DirectionsConfiguration { get; set; } = DirectionsConfiguration.Eight;
     public int Depth { get; set; } = 5;
     public float Sensitivity { get; set; } = 1.0f;
-    public int CurrentDirection { get; private set; }
-    public int CurrentDirectionType { get; private set; }
+    public AttackDirection CurrentDirection { get; private set; }
+    public int CurrentDirectionNormalized { get; private set; }
 
     public AttackDirectionController(ICoreClientAPI api, DirectionCursorRenderer renderer)
     {
@@ -52,6 +65,14 @@ public sealed class AttackDirectionController
 
     public void OnGameTick()
     {
+        if (DirectionsConfiguration == DirectionsConfiguration.None)
+        {
+            _directionCursorRenderer.Show = false;
+            return;
+        }
+
+        _directionCursorRenderer.Show = true;
+
         float pitch = _api.Input.MousePitch;
         float yaw = _api.Input.MouseYaw;
 
@@ -70,9 +91,9 @@ public sealed class AttackDirectionController
 
         if (delta > _sensitivityFactor / Sensitivity)
         {
-            CurrentDirectionType = direction;
-            CurrentDirection = _configurations[DirectionsConfiguration][CurrentDirectionType];
-            _directionCursorRenderer.CurrentDirection = CurrentDirection;
+            CurrentDirectionNormalized = direction;
+            CurrentDirection = (AttackDirection)_configurations[DirectionsConfiguration][CurrentDirectionNormalized];
+            _directionCursorRenderer.CurrentDirection = (int)CurrentDirection;
         }
 
         DebugWidgets.Text("debug", "mwf", 0, $"Angle: {angle}");

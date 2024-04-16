@@ -13,7 +13,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     public TimeSpan AnimationsEaseOutTime { get; set; } = TimeSpan.FromMilliseconds(500);
     public TimeSpan DefaultIdleAnimationDelay { get; set; } = TimeSpan.FromSeconds(5);
 
-    public delegate void ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand);
+    public delegate void ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction);
 
     public MeleeWeaponPlayerBehavior(Entity entity) : base(entity)
     {
@@ -33,13 +33,14 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         MeleeWeaponsFrameworkModSystem frameworkSystem = _api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>();
 
-        if (frameworkSystem.ActionListener is null)
+        if (frameworkSystem.ActionListener is null || frameworkSystem.DirectionController is null)
         {
             throw new ArgumentException($"Action listener is null, it may be caused by instantiating this behavior to early");
         }
 
         _actionListener = frameworkSystem.ActionListener;
         _animationSystem = _api.ModLoader.GetModSystem<AnimationManagerLibSystem>();
+        _directionController = frameworkSystem.DirectionController;
 
         if (_mainPlayer)
         {
@@ -49,7 +50,11 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     public override string PropertyName() => _statCategory;
     public override void OnGameTick(float deltaTime)
     {
-        if (_mainPlayer) _ = CheckIfItemsInHandsChanged();
+        if (!_mainPlayer) return;
+        
+        _ = CheckIfItemsInHandsChanged();
+        SetRenderDirectionCursorForMainHand();
+        _directionController.OnGameTick();
     }
 
     /// <summary>
@@ -100,6 +105,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private readonly IAnimationManagerSystem _animationSystem;
     private const string _statCategory = "melee-weapon-player-behavior";
     private readonly ActionListener _actionListener;
+    private readonly AttackDirectionController _directionController;
 
     private int _currentMainHandItemId = -1;
     private int _currentOffHandItemId = -1;
@@ -154,12 +160,12 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         if (mainHandId == itemId)
         {
-            callback.Invoke(_player.ActiveHandItemSlot, _player, ref _mainHandState, eventData, true);
+            callback.Invoke(_player.ActiveHandItemSlot, _player, ref _mainHandState, eventData, true, _directionController.CurrentDirection);
         }
 
         if (offHandId == itemId)
         {
-            callback.Invoke(_player.LeftHandItemSlot, _player, ref _offHandState, eventData, false);
+            callback.Invoke(_player.LeftHandItemSlot, _player, ref _offHandState, eventData, false, _directionController.CurrentDirection);
         }
     }
     private bool CheckIfItemsInHandsChanged()
@@ -198,6 +204,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
 
         weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
+        weapon.OnSelected(_player.ActiveHandItemSlot, _player);
 
         ResetIdleTimer();
     }
@@ -215,6 +222,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
 
         weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
+        weapon.OnSelected(_player.LeftHandItemSlot, _player);
 
         ResetIdleTimer();
     }
@@ -229,6 +237,18 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         {
             _idleTimer = _api.World.RegisterCallback((dt) => PlayIdleAnimation(), (int)(idleAnimationDelay ?? DefaultIdleAnimationDelay).TotalMilliseconds);
         }
+    }
+    private void SetRenderDirectionCursorForMainHand()
+    {
+        ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
+
+        if (stack == null || stack.Item is not MeleeWeaponItem weapon)
+        {
+            _directionController.DirectionsConfiguration = DirectionsConfiguration.None;
+            return;
+        }
+
+        _directionController.DirectionsConfiguration = weapon.DirectionsConfiguration;
     }
     private void PlayIdleAnimation()
     {
