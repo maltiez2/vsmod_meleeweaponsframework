@@ -12,6 +12,13 @@ public readonly struct MeleeAttackDamageId
     public readonly int ItemId;
     public readonly int AttackId;
     public readonly int DamageId;
+
+    public MeleeAttackDamageId(int itemId, int attackId, int damageId)
+    {
+        ItemId = itemId;
+        AttackId = attackId;
+        DamageId = damageId;
+    }
 }
 
 [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
@@ -21,6 +28,18 @@ public struct MeleeAttackDamagePacket
     public Vector3 Position { get; set; }
     public long AttackerEntityId { get; set; }
     public long TargetEntityId { get; set; }
+}
+
+public class MeleeAttackDamageTypeStats
+{
+    public float Damage { get; set; } = 0;
+    public float Knockback { get; set; } = 0;
+    public float Stagger { get; set; } = 1;
+    public int Tier { get; set; } = 0;
+    public string DamageType { get; set; } = "PiercingAttack";
+    public float[] HitWindow { get; set; } = new float[2];
+    public int DurabilityDamage { get; set; } = 0;
+    public float[] Collider { get; set; } = new float[6];
 }
 
 public struct MeleeAttackDamageType : IHasLineCollider
@@ -34,6 +53,9 @@ public struct MeleeAttackDamageType : IHasLineCollider
     public readonly float Stagger;
     public readonly int Tier;
     public readonly EnumDamageType DamageType;
+    /// <summary>
+    /// In fraction of attack duration
+    /// </summary>
     public readonly Vector2 HitWindow;
     public readonly int DurabilityDamage = 1;
 
@@ -59,6 +81,20 @@ public struct MeleeAttackDamageType : IHasLineCollider
         Id = id;
         HitWindow = hitWindow;
         DurabilityDamage = durabilityDamage;
+    }
+
+    public MeleeAttackDamageType(MeleeAttackDamageId id, MeleeAttackDamageTypeStats stats)
+    {
+        Damage = stats.Damage;
+        Knockback = stats.Knockback;
+        Stagger = stats.Stagger;
+        Tier = stats.Tier;
+        DamageType = Enum.Parse<EnumDamageType>(stats.DamageType);
+        RelativeCollider = new LineSegmentCollider(stats.Collider);
+        InWorldCollider = new LineSegmentCollider(stats.Collider);
+        Id = id;
+        HitWindow = new Vector2(stats.HitWindow[0], stats.HitWindow[1]);
+        DurabilityDamage = stats.DurabilityDamage;
     }
 
     public readonly Vector3? TryAttack(IPlayer attacker, Entity target)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Numerics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -31,6 +32,14 @@ public readonly struct AttackResult
     }
 }
 
+public class MeleeAttackStats
+{
+    public float Duration { get; set; } = 0;
+    public float MaxReach { get; set; } = 4.5f;
+    public MeleeAttackDamageTypeStats[] DamageTypes { get; set; } = Array.Empty<MeleeAttackDamageTypeStats>();
+    public SimpleCollisionEffects[] Effects { get; set; } = Array.Empty<SimpleCollisionEffects>();
+}
+
 public sealed class MeleeAttack
 {
     public int Id { get; }
@@ -61,6 +70,23 @@ public sealed class MeleeAttack
             {
                 _damageTypesEffects[damageType.Id] = new();
             }
+        }
+    }
+
+    public MeleeAttack(ICoreClientAPI api, int id, int itemId, MeleeAttackStats stats)
+    {
+        Id = id;
+        ItemId = itemId;
+        _api = api;
+
+        Duration = TimeSpan.FromMilliseconds(stats.Duration);
+        MaxReach = stats.MaxReach;
+
+        DamageTypes = stats.DamageTypes.Select((stats, index) => new MeleeAttackDamageType(new(itemId, id, index), stats)).ToImmutableArray();
+
+        for (int effectIndex = 0; effectIndex < stats.Effects.Length; effectIndex++)
+        {
+            _damageTypesEffects[new MeleeAttackDamageId(itemId, id, effectIndex)] = new CollisionEffects(api, stats.Effects[effectIndex]);
         }
     }
 
@@ -187,12 +213,31 @@ public sealed class MeleeAttack
 
 }
 
+public class SimpleCollisionEffects
+{
+    public AssetLocation EntityCollisionSounds { get; set; } = new();
+    public AssetLocation TerrainCollisionSounds { get; set; } = new();
+    public string TerrainCollisionParticles { get; set; } = "";
+    public string EntityCollisionParticles { get; set; } = "";
+}
+
 public sealed class CollisionEffects
 {
     public Dictionary<string, AssetLocation> EntityCollisionSounds { get; set; } = new();
     public Dictionary<string, AssetLocation> TerrainCollisionSounds { get; set; } = new();
     public Dictionary<string, (AdvancedParticleProperties effect, float directionFactor)> TerrainCollisionParticles { get; set; } = new();
     public Dictionary<string, (AdvancedParticleProperties effect, float directionFactor)> EntityCollisionParticles { get; set; } = new();
+
+    public CollisionEffects()
+    {
+
+    }
+    public CollisionEffects(ICoreClientAPI api, SimpleCollisionEffects simpleEffects)
+    {
+        EntityCollisionSounds.Add("*", simpleEffects.EntityCollisionSounds);
+        TerrainCollisionSounds.Add("*", simpleEffects.TerrainCollisionSounds);
+        // @TODO add particle effects manager
+    }
 
     public void OnTerrainCollision(Block block, Vector3 position, Vector3 direction, ICoreAPI api)
     {

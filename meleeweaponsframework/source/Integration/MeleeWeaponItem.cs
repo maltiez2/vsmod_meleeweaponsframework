@@ -79,10 +79,7 @@ public abstract class MeleeWeaponItem : Item
     protected ICoreClientAPI? Api { get; private set; }
     protected MeleeWeaponParameters? Parameters { get; private set; }
 
-    protected virtual MeleeWeaponParameters LoadParameters()
-    {
-        return Attributes[MeleeWeaponStatsAttribute].AsObject<MeleeWeaponParameters>();
-    }
+    protected virtual MeleeWeaponParameters LoadParameters() => Attributes[MeleeWeaponStatsAttribute].AsObject<MeleeWeaponParameters>();
 }
 
 public class GenericMeleeWeaponParameters : MeleeWeaponParameters

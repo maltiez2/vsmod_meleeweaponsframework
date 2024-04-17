@@ -3,6 +3,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 
 namespace MeleeWeaponsFramework;
 
@@ -106,6 +107,10 @@ public sealed class MeleeSystemServer : MeleeSystem
             .SetMessageHandler<MeleeAttackPacket>(HandlePacket);
     }
 
+    public void Register(MeleeAttack attack)
+    {
+        attack.DamageTypes.Foreach(damageType => Register(damageType));
+    }
     public bool Register(MeleeAttackDamageType damageType) => _attackDamageTypes.TryAdd(damageType.Id, damageType);
 
     private readonly ICoreServerAPI _api;
