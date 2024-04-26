@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CompactExifLib;
+using System;
 using System.Collections.Immutable;
 using System.Numerics;
 using Vintagestory.API.Client;
@@ -187,16 +188,17 @@ public sealed class MeleeAttack
         Entity[] entities = _api.World.GetEntitiesAround(player.Entity.Pos.XYZ, MaxReach, MaxReach);
 
         _entitiesCollisionsBuffer.Clear();
-        foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X >= progress && item.HitWindow.Y <= progress))
+        foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X <= progress && item.HitWindow.Y >= progress))
         {
             foreach ((Entity entity, Vector3? point) in entities
                     .Where(entity => entity != player.Entity)
                     .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
                     .Select(entity => (entity, damageType.TryAttack(player, entity))))
             {
+                Console.WriteLine($"{entity.Code}");
                 if (point == null) continue;
-                packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = point.Value, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId });
-                _damageTypesEffects[damageType.Id].OnEntityCollision(entity, damageType.InWorldCollider.Position, damageType.InWorldCollider.Direction, _api);
+                packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId });
+                if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnEntityCollision(entity, damageType.InWorldCollider.Position, damageType.InWorldCollider.Direction, _api);
                 _entitiesCollisionsBuffer.Add((entity, point.Value));
                 if (damageType.DurabilityDamage > 0)
                 {

@@ -4,7 +4,14 @@ using Vintagestory.API.Common.Entities;
 
 namespace MeleeWeaponsFramework;
 
-public readonly struct PlayerAnimationData
+public interface IPlayerAnimationData
+{
+    void Start(Entity entity, IAnimationManagerSystem system, TimeSpan easeInTime);
+    void Start(Entity entity, IAnimationManagerSystem system, params RunParameters[] parameters);
+    void Stop(Entity entity, IAnimationManagerSystem system, TimeSpan easeOutTime);
+}
+
+public readonly struct PlayerAnimationData : IPlayerAnimationData
 {
     public readonly AnimationId TpHands;
     public readonly AnimationId FpHands;
@@ -63,7 +70,7 @@ public readonly struct PlayerAnimationData
     /// <param name="entity"></param>
     /// <param name="system"></param>
     /// <param name="parameters"></param>
-    public void Start(Entity entity, IAnimationManagerSystem system, RunParameters parameters)
+    public void Start(Entity entity, IAnimationManagerSystem system, params RunParameters[] parameters)
     {
         system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpHands, parameters), synchronize: true);
         system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpHands, parameters), synchronize: false);
@@ -91,7 +98,84 @@ public readonly struct PlayerAnimationData
     /// </summary>
     /// <param name="system"></param>
     /// <returns></returns>
-    public static PlayerAnimationData Empty(IAnimationManagerSystem system) => new("empty", system);
+    public static PlayerAnimationData Empty(IAnimationManagerSystem system) => new("meleeweaponsframework-empty", system);
+
+    private readonly float _frame = 0f;
+}
+
+public readonly struct PlayerSimpleAnimationData : IPlayerAnimationData
+{
+    public readonly AnimationId Tp;
+    public readonly AnimationId Fp;
+
+    public const float DefaultCategoryWeight = 512f;
+
+    /// <summary>
+    /// Registers animations for player model and stores ids for future use.
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="system"></param>
+    /// <param name="easeInFrame">Frame used in <see cref="Start(Entity, IAnimationManagerSystem, TimeSpan)"/> method for EaseIn animation that is used by <see cref="MeleeWeaponPlayerBehavior"/> for Idle and Ready animations.</param>
+    public PlayerSimpleAnimationData(string code, IAnimationManagerSystem system, float easeInFrame = 0f)
+    {
+        string tpCode = $"{code}";
+        string fpCode = $"{code}-fp";
+
+        Tp = new("MeleeWeaponsFramework:TpHands", tpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
+        Fp = new("MeleeWeaponsFramework:FpHands", fpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
+
+        AnimationData tpData = AnimationData.Player(tpCode);
+        AnimationData fpData = AnimationData.Player(fpCode);
+
+        system.Register(Tp, tpData);
+        system.Register(Fp, fpData);
+
+        _frame = easeInFrame;
+    }
+
+    /// <summary>
+    /// Eases in animations on frame specified on construction.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="easeInTime"></param>
+    public void Start(Entity entity, IAnimationManagerSystem system, TimeSpan easeInTime)
+    {
+        RunParameters parameters = RunParameters.EaseIn(easeInTime, _frame, ProgressModifierType.Sin);
+
+        Start(entity, system, parameters);
+    }
+    /// <summary>
+    /// Runs animations with specified parameters.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="parameters"></param>
+    public void Start(Entity entity, IAnimationManagerSystem system, params RunParameters[] parameters)
+    {
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(Tp, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(Fp, parameters), synchronize: false);
+    }
+    /// <summary>
+    /// Eases out animations.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="system"></param>
+    /// <param name="easeOutTime"></param>
+    public void Stop(Entity entity, IAnimationManagerSystem system, TimeSpan easeOutTime)
+    {
+        RunParameters parameters = RunParameters.EaseOut(easeOutTime, ProgressModifierType.Sin);
+
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(Tp, parameters), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(Fp, parameters), synchronize: false);
+    }
+
+    /// <summary>
+    /// Returns animation data for animation with 'empty{-fp}' code and '0' ease in frame.
+    /// </summary>
+    /// <param name="system"></param>
+    /// <returns></returns>
+    public static PlayerSimpleAnimationData Empty(IAnimationManagerSystem system) => new("meleeweaponsframework-empty", system);
 
     private readonly float _frame = 0f;
 }

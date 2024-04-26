@@ -25,7 +25,7 @@ public readonly struct MeleeAttackDamageId
 public struct MeleeAttackDamagePacket
 {
     public MeleeAttackDamageId Id { get; set; }
-    public Vector3 Position { get; set; }
+    public float[] Position { get; set; }
     public long AttackerEntityId { get; set; }
     public long TargetEntityId { get; set; }
 }
@@ -38,11 +38,11 @@ public class MeleeAttackDamageTypeStats
     public int Tier { get; set; } = 0;
     public string DamageType { get; set; } = "PiercingAttack";
     public float[] HitWindow { get; set; } = new float[2];
-    public int DurabilityDamage { get; set; } = 0;
+    public int DurabilityDamage { get; set; } = 1;
     public float[] Collider { get; set; } = new float[6];
 }
 
-public struct MeleeAttackDamageType : IHasLineCollider
+public class MeleeAttackDamageType : IHasLineCollider
 {
     public MeleeAttackDamageId Id { get; }
     public LineSegmentCollider RelativeCollider { get; set; }
@@ -97,9 +97,11 @@ public struct MeleeAttackDamageType : IHasLineCollider
         DurabilityDamage = stats.DurabilityDamage;
     }
 
-    public readonly Vector3? TryAttack(IPlayer attacker, Entity target)
+    public Vector3? TryAttack(IPlayer attacker, Entity target)
     {
         Vector3? collisionPoint = Collide(target);
+
+        Console.WriteLine($"Collide: {collisionPoint}, InWorldCollider: {InWorldCollider.Position}");
 
         if (collisionPoint == null) return null;
 
@@ -107,7 +109,7 @@ public struct MeleeAttackDamageType : IHasLineCollider
 
         return received ? collisionPoint : null;
     }
-    public readonly bool Attack(Entity attacker, Entity target)
+    public bool Attack(Entity attacker, Entity target)
     {
         bool damageReceived = target.ReceiveDamage(new DamageSource()
         {
@@ -145,7 +147,7 @@ public struct MeleeAttackDamageType : IHasLineCollider
 #endif
 
     private const float _knockbackFactor = 0.1f;
-    private readonly Vector3? Collide(Entity target)
+    private Vector3? Collide(Entity target)
     {
         Cuboidf collisionBox = GetCollisionBox(target);
 

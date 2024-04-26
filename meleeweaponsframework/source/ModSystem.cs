@@ -7,6 +7,12 @@ namespace MeleeWeaponsFramework;
 
 public class MeleeWeaponsFrameworkModSystem : ModSystem
 {
+    public override void Start(ICoreAPI api)
+    {
+        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
+        api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
+    }
+
     public override void StartClientSide(ICoreClientAPI api)
     {
         _meleeSystemClient = new(api);
@@ -15,8 +21,6 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         _cursorRenderer = new(api);
         _directionController = new(api, _cursorRenderer);
         api.Event.RegisterRenderer(_cursorRenderer, EnumRenderStage.Ortho);
-
-        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
 
         new Harmony("meleeweaponsframework").PatchAll();
     }

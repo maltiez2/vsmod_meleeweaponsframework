@@ -1,0 +1,36 @@
+[ 
+	{ 
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "replace", 
+		"path": "/class", 
+		"value": "meleeweaponsframework:generic-melee-weapon"
+	},
+	{ 
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "add", 
+		"path": "/attributes/melee-weapon-stats", 
+		"value": {
+			"IdleAnimation": "idle1",
+			"ReadyAnimation": "idle1",
+			"AttackAnimation": "spearhit",
+			"AttackAnimationWindupFrame": 6,
+			"AttackAnimationStrikeFrame": 12,
+			"Collider": [1.0, 0, 0.5, 2.0, 0, 0.5],
+			"AttackWindUpMs": 100,
+			"AttackDurationMs": 300,
+			"AttackEaseOutMs": 200,
+			"AttackDamage": 1.0,
+			"AttackTier": 1,
+			"AttackDamageType": "BluntAttack"
+		}
+	},
+	{ 
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "replace", 
+		"path": "/heldTpHitAnimation", 
+		"value": "meleeweaponsframework-empty"
+	}
+]

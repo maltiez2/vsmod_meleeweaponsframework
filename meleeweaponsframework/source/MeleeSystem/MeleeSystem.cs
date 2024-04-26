@@ -23,6 +23,12 @@ public readonly struct AttackId
 {
     public readonly int ItemId;
     public readonly int Id;
+
+    public AttackId(int itemId, int id)
+    {
+        ItemId = itemId;
+        Id = id;
+    }
 }
 
 public sealed class MeleeSystemClient : MeleeSystem
@@ -35,6 +41,7 @@ public sealed class MeleeSystemClient : MeleeSystem
     }
 
     public bool Register(AttackId id, MeleeAttack attack) => _attacks.TryAdd(id, attack);
+    public bool Register(AttackId id, MeleeAttackStats stats) => _attacks.TryAdd(id, new(_api, id.Id, id.ItemId, stats));
     public void Start(AttackId id, Action<AttackResult> callback, bool rightHand = true)
     {
         ItemSlot slot = rightHand ? _api.World.Player.Entity.RightHandItemSlot : _api.World.Player.Entity.LeftHandItemSlot;
@@ -107,9 +114,9 @@ public sealed class MeleeSystemServer : MeleeSystem
             .SetMessageHandler<MeleeAttackPacket>(HandlePacket);
     }
 
-    public void Register(MeleeAttack attack)
+    public void Register(int id, int itemId, MeleeAttackStats stats)
     {
-        attack.DamageTypes.Foreach(damageType => Register(damageType));
+        stats.DamageTypes.Select((stats, index) => new MeleeAttackDamageType(new(itemId, id, index), stats)).Foreach(damageType => Register(damageType));
     }
     public bool Register(MeleeAttackDamageType damageType) => _attackDamageTypes.TryAdd(damageType.Id, damageType);
 

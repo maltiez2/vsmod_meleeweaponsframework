@@ -5,6 +5,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Util;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace MeleeWeaponsFramework;
 
@@ -13,7 +14,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     public TimeSpan AnimationsEaseOutTime { get; set; } = TimeSpan.FromMilliseconds(500);
     public TimeSpan DefaultIdleAnimationDelay { get; set; } = TimeSpan.FromSeconds(5);
 
-    public delegate void ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction);
+    public delegate bool ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction);
 
     public MeleeWeaponPlayerBehavior(Entity entity) : base(entity)
     {
@@ -27,7 +28,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             throw new ArgumentException($"This behavior is client side only");
         }
 
-        _mainPlayer = clientApi.World.Player.Entity.EntityId == entity.EntityId;
+        _mainPlayer = (entity as EntityPlayer)?.PlayerUID == clientApi.Settings.String["playeruid"];
         _player = player;
         _api = clientApi;
 
@@ -64,7 +65,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     /// <param name="mainHand"></param>
     /// <param name="playIdleAnimation"></param>
     /// <param name="idleAnimationDelay">If <see cref="null"/> - default value is used, if <see cref="TimeSpan.Zero"/> - idle animation wont play, else - idle animation will be player after specified time if no animations are played before.</param>
-    public void PlayAnimation(PlayerAnimationData animation, bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null)
+    public void PlayAnimation(IPlayerAnimationData animation, bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null)
     {
         if (!_mainPlayer) return;
         ResetIdleTimer(idleAnimationDelay, playIdleAnimation);
@@ -77,6 +78,22 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         else
         {
             animation.Start(entity, _animationSystem, AnimationsEaseOutTime);
+            _currentOffHandAnimation = animation;
+        }
+    }
+    public void PlayAnimation(IPlayerAnimationData animation, bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null, params RunParameters[] parameters)
+    {
+        if (!_mainPlayer) return;
+        ResetIdleTimer(idleAnimationDelay, playIdleAnimation);
+
+        if (mainHand)
+        {
+            animation.Start(entity, _animationSystem, parameters);
+            _currentMainHandAnimation = animation;
+        }
+        else
+        {
+            animation.Start(entity, _animationSystem, parameters);
             _currentOffHandAnimation = animation;
         }
     }
@@ -94,12 +111,24 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         _player.Stats.Set(_statCategory, stat, value);
     }
+    public void SetState(int state, bool mainHand = true)
+    {
+        if (!_mainPlayer) return;
+        if (mainHand)
+        {
+            _mainHandState = state;
+        }
+        else
+        {
+            _offHandState = state;
+        }
+    }
 
     private readonly bool _mainPlayer = false;
     private readonly ICoreClientAPI _api;
     private readonly EntityPlayer _player;
-    private PlayerAnimationData _currentMainHandAnimation = new();
-    private PlayerAnimationData _currentOffHandAnimation = new();
+    private IPlayerAnimationData _currentMainHandAnimation = new PlayerAnimationData();
+    private IPlayerAnimationData _currentOffHandAnimation = new PlayerAnimationData();
     private readonly HashSet<string> _currentMainHandPlayerStats = new();
     private readonly HashSet<string> _currentOffHandPlayerStats = new();
     private readonly IAnimationManagerSystem _animationSystem;
@@ -155,20 +184,22 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         return handlers;
     }
-    private void HandleActionEvent(ActionEventData eventData, int itemId, ActionEventCallbackDelegate callback)
+    private bool HandleActionEvent(ActionEventData eventData, int itemId, ActionEventCallbackDelegate callback)
     {
         int mainHandId = _player.ActiveHandItemSlot.Itemstack?.Id ?? -1;
         int offHandId = _player.LeftHandItemSlot.Itemstack?.Id ?? -1;
 
         if (mainHandId == itemId)
         {
-            callback.Invoke(_player.ActiveHandItemSlot, _player, ref _mainHandState, eventData, true, _directionController.CurrentDirection);
+            return callback.Invoke(_player.ActiveHandItemSlot, _player, ref _mainHandState, eventData, true, _directionController.CurrentDirection);
         }
 
         if (offHandId == itemId)
         {
-            callback.Invoke(_player.LeftHandItemSlot, _player, ref _offHandState, eventData, false, _directionController.CurrentDirection);
+            return callback.Invoke(_player.LeftHandItemSlot, _player, ref _offHandState, eventData, false, _directionController.CurrentDirection);
         }
+
+        return false;
     }
     private bool CheckIfItemsInHandsChanged()
     {

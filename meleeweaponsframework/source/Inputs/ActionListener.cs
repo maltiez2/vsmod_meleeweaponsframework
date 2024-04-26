@@ -125,7 +125,7 @@ public sealed class ActionListener : IDisposable
     /// </summary>
     /// <param name="action">Action and its state that will trigger the event.</param>
     /// <param name="callback">The callback method to be invoked when the event occurs.</param>
-    public void Subscribe(ActionEventId action, Action<ActionEventData> callback)
+    public void Subscribe(ActionEventId action, System.Func<ActionEventData, bool> callback)
     {
         if (!_subscriptions.ContainsKey(action))
         {
@@ -142,7 +142,12 @@ public sealed class ActionListener : IDisposable
         _clientApi.Input.InWorldAction -= OnEntityAction;
     }
 
-    private readonly Dictionary<ActionEventId, List<Action<ActionEventData>>> _subscriptions = new();
+    private readonly Dictionary<ActionEventId, List<System.Func<ActionEventData, bool>>> _subscriptions = new();
+    private readonly HashSet<EnumEntityAction> _tyronDecidedToMakeThisActionsInconsistent_ThanksTyron = new()
+    {
+        EnumEntityAction.InWorldLeftMouseDown,
+        EnumEntityAction.InWorldRightMouseDown
+    };
     private readonly Dictionary<EnumEntityAction, long> _timers = new();
     private readonly Dictionary<EnumEntityAction, ActionState> _actionStates = new();
     private readonly Dictionary<EnumEntityAction, EnumEntityAction> _modifiersRemapping = new()
@@ -159,6 +164,12 @@ public sealed class ActionListener : IDisposable
 
     private void OnEntityAction(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
+        if (_tyronDecidedToMakeThisActionsInconsistent_ThanksTyron.Contains(action))
+        {
+            OnEntityActionInconsistent(action, ref handled);
+            return;
+        }
+        
         _actionStates[action] = SwitchState(action, on);
 
         switch (_actionStates[action])
@@ -172,7 +183,21 @@ public sealed class ActionListener : IDisposable
                 break;
         }
 
-        CallSubscriptions(action);
+        if (CallSubscriptions(action))
+        {
+            handled = EnumHandling.Handled;
+        }
+    }
+    private void OnEntityActionInconsistent(EnumEntityAction action, ref EnumHandling handled)
+    {
+        _actionStates[action] = SwitchStateInconsistent(action);
+
+        if (CallSubscriptions(action))
+        {
+            handled = EnumHandling.Handled;
+        }
+
+        _actionStates[action] = SwitchStateInconsistent(action);
     }
     private void OnHoldTimer(EnumEntityAction action)
     {
@@ -184,33 +209,48 @@ public sealed class ActionListener : IDisposable
 
         CallSubscriptions(action);
     }
-    private void CallSubscriptions(EnumEntityAction action)
+    private bool CallSubscriptions(EnumEntityAction action)
     {
         ActionState state = _actionStates[action];
 
-        CallSubscriptionsForState(action, state);
+        bool handled = CallSubscriptionsForState(action, state);
 
         if (_actionStates[action] == ActionState.Hold || _actionStates[action] == ActionState.Pressed)
         {
-            CallSubscriptionsForState(action, ActionState.Active);
+            if (CallSubscriptionsForState(action, ActionState.Active))
+            {
+                handled = true;
+            }
         }
 
         if (_actionStates[action] == ActionState.Released)
         {
-            CallSubscriptionsForState(action, ActionState.Inactive);
+            if (CallSubscriptionsForState(action, ActionState.Inactive))
+            {
+                handled = true;
+            }
         }
+
+        return handled;
     }
-    private void CallSubscriptionsForState(EnumEntityAction action, ActionState state)
+    private bool CallSubscriptionsForState(EnumEntityAction action, ActionState state)
     {
         ActionEventId id = new(action, state);
 
-        if (!_subscriptions.TryGetValue(id, out List<Action<ActionEventData>>? value)) return;
+        if (!_subscriptions.TryGetValue(id, out List<System.Func<ActionEventData, bool>>? value)) return false;
+
+        bool handled = false;
         
         ActionEventData eventData = new(id, _modifiers.Where(IsActive));
-        foreach (Action<ActionEventData> callback in value)
+        foreach (System.Func<ActionEventData, bool> callback in value)
         {
-            callback.Invoke(eventData);
+            if (callback.Invoke(eventData))
+            {
+                handled = true;
+            }
         }
+
+        return handled;
     }
     private ActionState SwitchState(EnumEntityAction action, bool on)
     {
@@ -226,6 +266,24 @@ public sealed class ActionListener : IDisposable
             (false, ActionState.Pressed) => ActionState.Released,
             (false, ActionState.Active) => ActionState.Released,
             (false, ActionState.Hold) => ActionState.Released,
+            (false, ActionState.Released) => ActionState.Inactive,
+            _ => ActionState.Inactive
+        };
+    }
+    private ActionState SwitchStateInconsistent(EnumEntityAction action)
+    {
+        return (true, _actionStates[action]) switch
+        {
+            (true, ActionState.Inactive) => ActionState.Pressed,
+            (true, ActionState.Pressed) => ActionState.Inactive,
+            (true, ActionState.Active) => ActionState.Inactive,
+            (true, ActionState.Hold) => ActionState.Inactive,
+            (true, ActionState.Released) => ActionState.Inactive,
+
+            (false, ActionState.Inactive) => ActionState.Inactive,
+            (false, ActionState.Pressed) => ActionState.Inactive,
+            (false, ActionState.Active) => ActionState.Inactive,
+            (false, ActionState.Hold) => ActionState.Inactive,
             (false, ActionState.Released) => ActionState.Inactive,
             _ => ActionState.Inactive
         };
