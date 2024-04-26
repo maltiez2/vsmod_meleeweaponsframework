@@ -11,11 +11,13 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     {
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
         api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
+        api.RegisterItemClass("meleeweaponsframework:vanilla-spear-melee-weapon", typeof(VanillaSpear)); 
     }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
         _meleeSystemClient = new(api);
+        _throwSystemClient = new(api);
         _actionListener = new(api);
 
         _cursorRenderer = new(api);
@@ -28,6 +30,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         _meleeSystemServer = new(api);
+        _throwSystemServer = new(api);
     }
 
     public override void Dispose()
@@ -40,10 +43,14 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     internal MeleeSystemServer? MeleeSystemServer => _meleeSystemServer;
     internal DirectionCursorRenderer? CursorRenderer => _cursorRenderer;
     internal AttackDirectionController? DirectionController => _directionController;
+    internal ThrowSystemClient? ThrowSystemClient => _throwSystemClient;
+    internal ThrowSystemServer? ThrowSystemServer => _throwSystemServer;
 
     private MeleeSystemClient? _meleeSystemClient;
     private ActionListener? _actionListener;
     private MeleeSystemServer? _meleeSystemServer;
     private DirectionCursorRenderer? _cursorRenderer;
     private AttackDirectionController? _directionController;
+    private ThrowSystemClient? _throwSystemClient;
+    private ThrowSystemServer? _throwSystemServer;
 }

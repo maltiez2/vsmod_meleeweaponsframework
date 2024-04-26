@@ -4,7 +4,7 @@
 		"file": "game:itemtypes/tool/spear", 
 		"op": "replace", 
 		"path": "/class", 
-		"value": "meleeweaponsframework:generic-melee-weapon"
+		"value": "meleeweaponsframework:vanilla-spear-melee-weapon"
 	},
 	{ 
 		"side": "Server", 
@@ -20,10 +20,33 @@
 			"Collider": [1.0, 0, 0.5, 2.0, 0, 0.5],
 			"AttackWindUpMs": 100,
 			"AttackDurationMs": 300,
-			"AttackEaseOutMs": 200,
-			"AttackDamage": 1.0,
-			"AttackTier": 1,
-			"AttackDamageType": "BluntAttack"
+			"AttackEaseOutMs": 300,
+			"AttackDamageByType": {
+				"spear-generic-chert": 1.75,
+				"spear-generic-granite": 1.75,
+				"spear-generic-andesite": 1.75,
+				"spear-generic-peridotite": 1.75,
+				"spear-generic-basalt": 1.75,
+				"spear-generic-flint": 2,
+				"spear-generic-obsidian": 2.25,
+				"spear-scrap-scrap": 2.75,
+				"spear-generic-copper": 2.75,
+				"spear-generic-bismuthbronze": 3.25,
+				"spear-generic-tinbronze": 3.75,
+				"spear-generic-blackbronze": 4,
+				"spear-generic-hacking": 4,
+				"*-ruined": 4,
+				"spear-generic-ornategold": 4.25,
+				"spear-generic-ornatesilver": 4.25
+			},
+			"AttackTier": 0,
+			"AttackDamageType": "PiercingAttack",
+			"ThrowDamage": 1,
+			"ProjectileEntity": "spear-{type}-{material}",
+			"AimAnimation": "throwaim",
+			"AimAnimationFrame": 9,
+			"ThrowAnimation": "throw",
+			"ThrowAnimationDurationMs": 5
 		}
 	},
 	{ 

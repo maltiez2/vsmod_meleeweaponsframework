@@ -212,7 +212,6 @@ public sealed class MeleeAttack
         _entitiesCollisionsBuffer.Clear();
         return result;
     }
-
 }
 
 public class SimpleCollisionEffects

@@ -2,6 +2,9 @@
 using AnimationManagerLib.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Server;
+using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
@@ -102,20 +105,17 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        Console.WriteLine($"OnAttack, state: {(GenericMeleeWeaponState)state}");
         if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
 
-        Console.WriteLine($"Start attack");
-        MeleeSystem?.Start(Attack, OnAttackCallback);
+        MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction));
         Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
         state = (int)GenericMeleeWeaponState.Attacking;
 
         return true;
     }
 
-    protected virtual void OnAttackCallback(AttackResult result)
+    protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction)
     {
-        Console.WriteLine($"{result.Result}");
         if (result.Result == AttackResultFlag.Finished)
         {
             MeleeSystem?.Stop();
