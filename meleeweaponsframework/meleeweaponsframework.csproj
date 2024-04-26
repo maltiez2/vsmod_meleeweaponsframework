@@ -175,8 +175,9 @@
       <AssetsFolder Include="$(AssetsDir)\**\*.*" />
       <ModIcon Include="$(ModIconFile)" />
     </ItemGroup>
-    <Copy SourceFiles="@(AssetsFolder)" DestinationFiles="@(AssetsFolder->'$(OutputPath)assets\%(RecursiveDir)%(Filename)%(Extension)')" Condition="Exists('$(AssetsDir)')" />
-    <Copy SourceFiles="@(ModIcon)" DestinationFolder="$(OutputPath)" Condition="Exists('$(ModIconFile)')" />
+    <RemoveDir Directories="$(OutputPath)assets" />
+    <Copy SourceFiles="@(AssetsFolder)" DestinationFiles="@(AssetsFolder->'$(OutputPath)assets\%(RecursiveDir)%(Filename)%(Extension)')" Condition="Exists('$(AssetsDir)')" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="@(ModIcon)" DestinationFolder="$(OutputPath)" Condition="Exists('$(ModIconFile)')" OverwriteReadOnlyFiles="true" />
   </Target>
 
   <!-- Archives output directory into zip and puts it into Releases folder -->

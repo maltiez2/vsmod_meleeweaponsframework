@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "patches": {
+    "boolean": {
+      "meleeweaponsframework:patches/vanilla-weapons.json": {
+        "0/enabled": "Vanilla_spears_patch",
+        "1/enabled": "Vanilla_spears_patch",
+        "2/enabled": "Vanilla_spears_patch"
+      }
+    }
+  },
+  "settings": [
+    {
+      "code": "Vanilla_spears_patch",
+      "type": "boolean",
+      "comment": "Makes vanilla spears use collision based hit detection",
+      "default": true
+    }
+  ]
+}

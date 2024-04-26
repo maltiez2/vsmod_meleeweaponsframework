@@ -80,10 +80,12 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     {
         base.OnHeldRenderOpaque(inSlot, byPlayer);
 
+#if DEBUG
         if (Api != null)
         {
             DebugCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
         }
+#endif
     }
 
     public override void OnHeldAttackStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandHandling handling)
@@ -102,19 +104,19 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     protected AttackId Attack { get; private set; } = new(0, 0);
     protected RunParameters[] AnimationParameters { get; private set; } = Array.Empty<RunParameters>();
 
-    [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
 
-        MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction));
+        MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction, mainHand));
         Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
         state = (int)GenericMeleeWeaponState.Attacking;
 
         return true;
     }
 
-    protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction)
+    protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction, bool mainHand)
     {
         if (result.Result == AttackResultFlag.Finished)
         {

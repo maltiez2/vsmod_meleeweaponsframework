@@ -101,8 +101,6 @@ public class MeleeAttackDamageType : IHasLineCollider
     {
         Vector3? collisionPoint = Collide(target);
 
-        Console.WriteLine($"Collide: {collisionPoint}, InWorldCollider: {InWorldCollider.Position}");
-
         if (collisionPoint == null) return null;
 
         bool received = Attack(attacker.Entity, target);

@@ -195,7 +195,6 @@ public sealed class MeleeAttack
                     .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
                     .Select(entity => (entity, damageType.TryAttack(player, entity))))
             {
-                Console.WriteLine($"{entity.Code}");
                 if (point == null) continue;
                 packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId });
                 if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnEntityCollision(entity, damageType.InWorldCollider.Position, damageType.InWorldCollider.Direction, _api);
