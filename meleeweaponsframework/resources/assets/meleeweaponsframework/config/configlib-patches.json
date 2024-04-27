@@ -1,19 +1,56 @@
 {
-  "version": 1,
+  "version": 2,
   "patches": {
     "boolean": {
-      "meleeweaponsframework:patches/vanilla-weapons.json": {
+      "meleeweaponsframework:patches/weapons/spears.json": {
         "0/enabled": "Vanilla_spears_patch",
         "1/enabled": "Vanilla_spears_patch",
-        "2/enabled": "Vanilla_spears_patch"
+        "2/enabled": "Vanilla_spears_patch",
+        "3/enabled": "Vanilla_spears_rendering_patch"
+      },
+      "meleeweaponsframework:patches/weapons/swords.json": {
+        "0/enabled": "Vanilla_spears_patch",
+        "1/enabled": "Vanilla_spears_patch",
+        "2/enabled": "Vanilla_spears_patch",
+        "3/enabled": "Vanilla_swords_rendering_patch"
       }
     }
   },
   "settings": [
     {
+      "type": "separator",
+      "title": "Hit detection patches"
+    },
+    {
       "code": "Vanilla_spears_patch",
+      "ingui": "vanilla-spears-patch",
       "type": "boolean",
-      "comment": "Makes vanilla spears use collision based hit detection",
+      "comment": "vanilla-spears-patch-desc",
+      "default": true
+    },
+    {
+      "code": "Vanilla_swords_patch",
+      "ingui": "vanilla-swords-patch",
+      "type": "boolean",
+      "comment": "vanilla-swords-patch-desc",
+      "default": true
+    },
+    {
+      "type": "separator",
+      "title": "Rendering patches"
+    },
+    {
+      "code": "Vanilla_spears_rendering_patch",
+      "ingui": "vanilla-spears-rednering",
+      "type": "boolean",
+      "comment": "vanilla-spears-patch-desc",
+      "default": true
+    },
+    {
+      "code": "Vanilla_swords_rendering_patch",
+      "ingui": "vanilla-swords-rednering",
+      "type": "boolean",
+      "comment": "vanilla-swords-rednering-desc",
       "default": true
     }
   ]

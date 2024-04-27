@@ -1,0 +1,112 @@
+[ 
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/blade", 
+		"op": "add", 
+		"path": "/class", 
+		"value": "meleeweaponsframework:generic-melee-weapon"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/blade", 
+		"op": "add", 
+		"path": "/attributes/melee-weapon-stats", 
+		"value": {
+			"IdleAnimation": "idle1",
+			"ReadyAnimation": "idle1",
+			"AttackAnimationByType": {
+				"blade-forlorn-iron": "meleeweaponsframework-spear-hit",
+				"blade-blackguard-iron": "meleeweaponsframework-spear-hit",
+				"blade-gladius-ruined": "meleeweaponsframework-spear-hit",
+				"*": "falx"
+			},
+			"AttackAnimationWindupFrameByType": {
+				"blade-forlorn-iron": 6,
+				"blade-blackguard-iron": 6,
+				"blade-gladius-ruined": 6,
+				"*": 4
+			},
+			"AttackAnimationStrikeFrameByType": {
+				"blade-forlorn-iron": 10,
+				"blade-blackguard-iron": 10,
+				"blade-gladius-ruined": 10,
+				"*": 23
+			},
+			"ColliderByType":
+			{
+				"*-scrap":				[0.3, 0, 0.5, 1.4, 0, 0.5],
+				"*-ruined":				[0.3, 0, 0.5, 2.0, 0, 0.5],
+				"*-blackguard-*":	[0.2, 0, 0.5, 1.3, 0, 0.5],
+				"*-forlorn-*":		[0.2, 0, 0.5, 2.0, 0, 0.5],
+				"*-admin":				[1.0, 0, 0.5, 1.8, 0, 0.5],
+				"*":							[0.2, 0, 0.5, 1.3, 0, 0.1]
+			},
+			"AttackWindUpMs": 100,
+			"AttackDurationMsByType": {
+				"blade-forlorn-iron": 200,
+				"blade-blackguard-iron": 200,
+				"blade-gladius-ruined": 200,
+				"*": 500
+			},
+			"AttackEaseOutMs": 300,
+			"AttackDamageByType": {
+				"blade-scrap-scrap": 3,
+				"blade-falx-copper": 3.75,
+				"blade-falx-bismuthbronze": 4.25,
+				"blade-falx-tinbronze": 4.5,
+				"*-ruined": 4.5,
+				"blade-falx-blackbronze": 4.75,
+				"blade-falx-iron": 5,
+				"blade-falx-meteoriciron": 5.25,
+				"blade-falx-steel": 5.25,
+				"blade-falx-gold": 5.25,
+				"blade-falx-silver": 5.25,
+				"blade-blackguard-iron": 5.25,
+				"blade-forlorn-iron": 5.25,
+				"blade-longsword-admin": 300
+			},
+			"AttackTierByType": {
+				"*-scrap": 2,
+				"*-copper": 2,
+				"*-ruined": 2,
+				"*-gold": 5,
+				"*-silver": 5,
+				"*-bismuthbronze": 3,
+				"*-tinbronze": 3,
+				"*-blackbronze": 3,
+				"*-iron": 4,
+				"*-meteoriciron": 4,
+				"*-steel": 5,
+				"*-blackguard-*": 4,
+				"*-forlorn-*": 4,
+				"*-admin": 5
+			},
+			"AttackDamageType": "SlashingAttack"
+		}
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/blade", 
+		"op": "remove",
+		"path": "/heldTpHitAnimationByType"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/blade", 
+		"op": "add",
+		"path": "/heldTpHitAnimation", 
+		"value": "meleeweaponsframework-empty"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/blade",
+		"op": "add",
+		"path": "/attributes/fpHandsOffset", 
+		"value": 0
+	}
+]

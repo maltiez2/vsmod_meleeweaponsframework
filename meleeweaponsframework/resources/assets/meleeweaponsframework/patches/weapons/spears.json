@@ -76,5 +76,13 @@
 		"op": "replace", 
 		"path": "/heldTpHitAnimation", 
 		"value": "meleeweaponsframework-empty"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "add", 
+		"path": "/attributes/fpHandsOffset", 
+		"value": 0
 	}
 ]

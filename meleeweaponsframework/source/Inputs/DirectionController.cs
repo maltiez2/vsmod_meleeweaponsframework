@@ -1,7 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using VSImGui.Debug;
 
 namespace MeleeWeaponsFramework;
 
@@ -95,13 +94,6 @@ public sealed class AttackDirectionController
             CurrentDirection = (AttackDirection)_configurations[DirectionsConfiguration][CurrentDirectionNormalized];
             _directionCursorRenderer.CurrentDirection = (int)CurrentDirection;
         }
-
-        DebugWidgets.Text("debug", "mwf", 0, $"Angle: {angle}");
-        DebugWidgets.Text("debug", "mwf", 1, $"Direction: {direction}");
-        DebugWidgets.Text("debug", "mwf", 2, $"Delta: {delta}");
-        DebugWidgets.FloatSlider("debug", "mwf", "sensitivity", 0.01f, 10, () => Sensitivity, (value) => Sensitivity = value);
-        DebugWidgets.FloatSlider("debug", "mwf", "scale", 0.1f, 1, () => _directionCursorRenderer.CursorScale, (value) => _directionCursorRenderer.CursorScale = value);
-        DebugWidgets.EnumCombo("debug", "mwf", "type", () => DirectionsConfiguration, (value) => DirectionsConfiguration = value);
     }
 
     private static float[] DivideCircle(int N, float offset)

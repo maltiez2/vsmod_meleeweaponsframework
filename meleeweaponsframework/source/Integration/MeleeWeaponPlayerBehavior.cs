@@ -97,6 +97,28 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             _currentOffHandAnimation = animation;
         }
     }
+    public void StopAnimation(bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null, params RunParameters[] parameters)
+    {
+        if (!_mainPlayer) return;
+        ResetIdleTimer(idleAnimationDelay, playIdleAnimation);
+
+        if (mainHand)
+        {
+            _currentMainHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
+
+            ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
+            if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+            weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
+        }
+        else
+        {
+            _currentOffHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
+
+            ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
+            if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+            weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
+        }
+    }
     public void SetStat(string stat, float value, bool mainHand = true)
     {
         if (!_mainPlayer) return;
@@ -237,11 +259,20 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
 
-        if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+        if (stack == null || stack.Item is not MeleeWeaponItem weapon)
+        {
+            RenderingOffset.ResetOffset();
+            return;
+        }
 
         weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
         weapon.OnSelected(_player.ActiveHandItemSlot, _player);
         _currentMainHandWeapon = weapon;
+
+        if (weapon.Attributes?["fpHandsOffset"].Exists == true)
+        {
+            RenderingOffset.SetOffset(weapon.Attributes["fpHandsOffset"].AsFloat());
+        }
 
         ResetIdleTimer();
     }

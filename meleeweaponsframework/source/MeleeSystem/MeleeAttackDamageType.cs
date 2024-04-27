@@ -42,6 +42,22 @@ public class MeleeAttackDamageTypeStats
     public float[] Collider { get; set; } = new float[6];
 }
 
+public interface IDirectionalDamage
+{
+    public int Direction { get; set; }
+}
+
+public interface ILocationalDamage
+{
+    public Vector3 Position { get; set; }
+}
+
+public class MeleeAttackDamageSource : DamageSource, IDirectionalDamage, ILocationalDamage
+{
+    public int Direction { get; set; }
+    public Vector3 Position { get; set; }
+}
+
 public class MeleeAttackDamageType : IHasLineCollider
 {
     public MeleeAttackDamageId Id { get; }
@@ -57,7 +73,7 @@ public class MeleeAttackDamageType : IHasLineCollider
     /// In fraction of attack duration
     /// </summary>
     public readonly Vector2 HitWindow;
-    public readonly int DurabilityDamage = 1;
+    public readonly int DurabilityDamage;
 
     public MeleeAttackDamageType(
         MeleeAttackDamageId id,
@@ -97,25 +113,27 @@ public class MeleeAttackDamageType : IHasLineCollider
         DurabilityDamage = stats.DurabilityDamage;
     }
 
-    public Vector3? TryAttack(IPlayer attacker, Entity target)
+    public Vector3? TryAttack(IPlayer attacker, Entity target, int direction)
     {
         Vector3? collisionPoint = Collide(target);
 
         if (collisionPoint == null) return null;
 
-        bool received = Attack(attacker.Entity, target);
+        bool received = Attack(attacker.Entity, target, direction, collisionPoint.Value);
 
         return received ? collisionPoint : null;
     }
-    public bool Attack(Entity attacker, Entity target)
+    public bool Attack(Entity attacker, Entity target, int direction, Vector3 position)
     {
-        bool damageReceived = target.ReceiveDamage(new DamageSource()
+        bool damageReceived = target.ReceiveDamage(new MeleeAttackDamageSource()
         {
             Source = attacker is EntityPlayer ? EnumDamageSource.Player : EnumDamageSource.Entity,
             SourceEntity = null,
             CauseEntity = attacker,
             Type = DamageType,
-            DamageTier = Tier
+            DamageTier = Tier,
+            Direction = direction,
+            Position = position
         }, Damage);
 
         bool received = damageReceived || Damage <= 0;

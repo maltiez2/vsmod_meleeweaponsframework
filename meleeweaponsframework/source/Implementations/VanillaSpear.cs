@@ -62,6 +62,12 @@ public class VanillaSpear : GenericMeleeWeapon
         return false;
     }
 
+    public override void OnDeselected(EntityPlayer player)
+    {
+        base.OnDeselected(player);
+        ThrowSystemClient?.Stop();
+    }
+
     protected VanillaSpearParameters SpearParameters { get; set; } = new();
     protected ThrowSystemClient? ThrowSystemClient { get; set; }
     protected ThrowSystemServer? ThrowSystemServer { get; set; }
@@ -97,7 +103,7 @@ public class VanillaSpear : GenericMeleeWeapon
         if (currentTime - AimStartTime < SpearParameters.AimMinimumDurationMs)
         {
             ThrowSystemClient?.Stop();
-            Behavior?.PlayAnimation(ReadyAnimation, mainHand);
+            Behavior?.StopAnimation(mainHand);
         }
         else
         {

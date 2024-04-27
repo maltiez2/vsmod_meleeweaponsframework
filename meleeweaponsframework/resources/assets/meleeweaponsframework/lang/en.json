@@ -1,3 +1,11 @@
 {
-    
+    "vanilla-spears-patch": "Vanilla spears",
+    "vanilla-swords-patch": "Vanilla swords",
+    "vanilla-spears-rednering": "Vanilla spears rendering offset",
+    "vanilla-swords-rednering": "Vanilla swords rendering offset",
+
+    "vanilla-spears-patch-desc": "Adds new collision based hit detrection system to vanilla spears",
+    "vanilla-swords-patch-desc": "Adds new collision based hit detrection system to vanilla swords",
+    "vanilla-spears-rednering-desc": "Changes rendering for spears so they will clip into enemies and terrain, it makes it easier to jusdje distance",
+    "vanilla-swords-rednering-desc": "Changes rendering for swords so they will clip into enemies and terrain, it makes it easier to jusdje distance"
 }

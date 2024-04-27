@@ -5,7 +5,7 @@ using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-internal static class HarmonyPatches
+internal static class RenderingOffset
 {
     public static float FpHandsOffset { get; set; } = DefaultFpHandsOffset;
     public const float DefaultFpHandsOffset = -0.3f;
@@ -26,7 +26,7 @@ internal static class HarmonyPatches
                 if (codes[i].opcode == OpCodes.Ldc_R4 && (float)codes[i].operand == -0.3f)
                 {
                     codes[i].opcode = OpCodes.Call;
-                    codes[i].operand = typeof(HarmonyPatches).GetMethod("GetOffset");
+                    codes[i].operand = typeof(RenderingOffset).GetMethod("GetOffset");
 
                     codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldfld, typeof(EntityPlayerShapeRenderer).GetField("modSys", BindingFlags.NonPublic | BindingFlags.Instance)));
@@ -51,7 +51,7 @@ internal static class HarmonyPatches
                 if (codes[i].opcode == OpCodes.Ldc_R4 && (float)codes[i].operand == -0.3f)
                 {
                     codes[i].opcode = OpCodes.Call;
-                    codes[i].operand = typeof(HarmonyPatches).GetMethod("GetOffset");
+                    codes[i].operand = typeof(RenderingOffset).GetMethod("GetOffset");
 
                     codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldfld, typeof(EntityPlayerShapeRenderer).GetField("modSys", BindingFlags.NonPublic | BindingFlags.Instance)));

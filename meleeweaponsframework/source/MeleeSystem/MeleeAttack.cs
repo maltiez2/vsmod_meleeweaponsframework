@@ -91,10 +91,11 @@ public sealed class MeleeAttack
         }
     }
 
-    public void Start(IPlayer player)
+    public void Start(IPlayer player, int direction)
     {
         long entityId = player.Entity.EntityId;
 
+        _direction = direction;
         _currentTime[entityId] = 0;
         _totalTime[entityId] = (float)Duration.TotalMilliseconds; // @TODO: Make some stats to affect this
         if (_totalTime[entityId] <= 0) _totalTime[entityId] = 1;
@@ -163,6 +164,7 @@ public sealed class MeleeAttack
     private readonly HashSet<(Block block, Vector3 point)> _terrainCollisionsBuffer = new();
     private readonly HashSet<(Entity entity, Vector3 point)> _entitiesCollisionsBuffer = new();
     private readonly Dictionary<MeleeAttackDamageId, CollisionEffects> _damageTypesEffects = new();
+    private int _direction = 0;
 
     private IEnumerable<(Block block, Vector3 point)> CheckTerrainCollision(float progress)
     {
@@ -193,7 +195,7 @@ public sealed class MeleeAttack
             foreach ((Entity entity, Vector3? point) in entities
                     .Where(entity => entity != player.Entity)
                     .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
-                    .Select(entity => (entity, damageType.TryAttack(player, entity))))
+                    .Select(entity => (entity, damageType.TryAttack(player, entity, _direction))))
             {
                 if (point == null) continue;
                 packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId });

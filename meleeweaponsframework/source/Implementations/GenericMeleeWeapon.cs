@@ -63,7 +63,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
 
         AnimationParameters = new RunParameters[]
         {
-            RunParameters.EaseIn(GenericParameters.AttackWindUpMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, ProgressModifierType.Sqrt),
+            RunParameters.EaseIn(GenericParameters.AttackWindUpMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, ProgressModifierType.SinQuadratic),
             RunParameters.Play(GenericParameters.AttackDurationMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, GenericParameters.AttackAnimationStrikeFrame, ProgressModifierType.Linear),
             RunParameters.EaseOut(GenericParameters.AttackEaseOutMs / 1000.0f, ProgressModifierType.Sin)
         };
