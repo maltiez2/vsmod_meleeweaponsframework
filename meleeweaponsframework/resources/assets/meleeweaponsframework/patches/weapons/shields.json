@@ -1,0 +1,51 @@
+[ 
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/shield", 
+		"op": "replace", 
+		"path": "/class", 
+		"value": "meleeweaponsframework:vanilla-spear-melee-weapon"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/shield", 
+		"op": "replace", 
+		"path": "/attributes/shield", 
+		"value": {
+			"blockSound": "",
+			"protectionChance": {
+				"passive": 0,
+				"active": 0
+			},
+			"damageAbsorption": {
+				"passive": 0,
+				"active": 0
+			}
+		}
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/shield", 
+		"op": "add", 
+		"path": "/attributes/melee-weapon-stats", 
+		"value": {
+			"IdleAnimation": "idle1",
+			"ReadyAnimation": "idle1",
+			"BlockAnimation": "raiseshield-left",
+			"PerfectBlockWindowMs": 300,
+			"CoverageDegrees": 120,
+			"DamageMultiplierByType": {
+				"*-crude": 0.5,
+				"*-woodmetal": 0.75,
+				"*-woodmetalleather": 0.80,
+				"*-metal": 0.90,
+				"*-blackguard": 0.95
+			},
+			"BlockSound": "game:held/shieldblock",
+			"PerfectBlockSound": "game:held/shieldblock"
+		}
+	}
+]

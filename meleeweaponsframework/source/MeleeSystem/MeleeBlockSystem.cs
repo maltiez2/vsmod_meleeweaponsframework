@@ -45,7 +45,8 @@ public sealed class MeleeBlockSystemClient : MeleeBlockSystem
     {
         _api = api;
         _clientChannel = api.Network.RegisterChannel(NetworkChannelId)
-            .RegisterMessageType<MeleeBlockPacket>();
+            .RegisterMessageType<MeleeBlockPacket>()
+            .RegisterMessageType<MeleeBlockStopPacket>();
     }
 
     public bool Register(MeleeBlockId id, MeleeBlock block) => _blocks.TryAdd(id, block);

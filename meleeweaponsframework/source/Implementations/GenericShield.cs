@@ -26,7 +26,7 @@ public enum GenericShieldState
     Blocking
 }
 
-public class GenericShield : MeleeWeaponItem
+public class GenericShield : MeleeShieldItem
 {
     public override void OnLoaded(ICoreAPI api)
     {
@@ -87,7 +87,9 @@ public class GenericShield : MeleeWeaponItem
     [ActionEventHandler(EnumEntityAction.Right, ActionState.Pressed)]
     protected virtual bool OnBlock(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != (int)GenericShieldState.Idle) return true;
+        if (mainHand) return false;
+        
+        if (state != (int)GenericShieldState.Idle) return true;
         state = (int)GenericShieldState.Blocking;
 
         Behavior?.PlayAnimation(BlockAnimation, mainHand, false, null, EaseInAnimationParameters);
@@ -99,7 +101,9 @@ public class GenericShield : MeleeWeaponItem
     [ActionEventHandler(EnumEntityAction.Right, ActionState.Released)]
     protected virtual bool OnEase(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != (int)GenericShieldState.Blocking) return true;
+        if (mainHand) return false;
+
+        if (state != (int)GenericShieldState.Blocking) return true;
         state = (int)GenericShieldState.Idle;
 
         Behavior?.StopAnimation(mainHand, true, null, EaseOutAnimationParameters);
