@@ -24,8 +24,24 @@ public class MeleeWeaponParameters
     public string DirectionsConfiguration { get; set; } = "None";
 }
 
-public abstract class MeleeWeaponItem : Item
+public interface IMeleeWeaponItem
 {
+    public int WeaponItemId { get; }
+    PlayerAnimationData IdleAnimation { get; }
+    PlayerAnimationData ReadyAnimation { get; }
+    PlayerAnimationData IdleAnimationOffhand { get; }
+    PlayerAnimationData ReadyAnimationOffhand { get; }
+    DirectionsConfiguration DirectionsType { get; }
+    bool RenderDirectionCursor { get; }
+
+    void OnSelected(ItemSlot slot, EntityPlayer player);
+    void OnDeselected(EntityPlayer player);
+    void OnRegistered(MeleeWeaponPlayerBehavior behavior, ICoreClientAPI api);
+}
+
+public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
+{
+    public int WeaponItemId => ItemId;
     public virtual PlayerAnimationData IdleAnimation { get; protected set; }
     public virtual PlayerAnimationData ReadyAnimation { get; protected set; }
     public virtual PlayerAnimationData IdleAnimationOffhand { get; protected set; }
@@ -40,12 +56,14 @@ public abstract class MeleeWeaponItem : Item
         if (api is ICoreServerAPI serverApi)
         {
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
+            BlockSystemServer = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
 
         if (api is not ICoreClientAPI clientAPI) return;
 
         IAnimationManagerSystem animationSystem = clientAPI.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         MeleeSystem = clientAPI.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+        BlockSystem = clientAPI.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
 
         Parameters = Attributes[MeleeWeaponStatsAttribute].AsObject<MeleeWeaponParameters>();
 
@@ -76,6 +94,8 @@ public abstract class MeleeWeaponItem : Item
     protected MeleeWeaponPlayerBehavior? Behavior { get; private set; }
     protected MeleeSystemClient? MeleeSystem { get; private set; }
     protected MeleeSystemServer? ServerMeleeSystem { get; private set; }
+    protected MeleeBlockSystemClient? BlockSystem { get; private set; }
+    protected MeleeBlockSystemServer? BlockSystemServer { get; private set; }
     protected ICoreClientAPI? Api { get; private set; }
     protected MeleeWeaponParameters Parameters { get; private set; } = new();
 }

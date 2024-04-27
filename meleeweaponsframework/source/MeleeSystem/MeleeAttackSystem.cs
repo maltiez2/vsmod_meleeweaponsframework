@@ -43,7 +43,7 @@ public sealed class MeleeSystemClient : MeleeSystem
 
     public bool Register(AttackId id, MeleeAttack attack) => _attacks.TryAdd(id, attack);
     public bool Register(AttackId id, MeleeAttackStats stats) => _attacks.TryAdd(id, new(_api, id.Id, id.ItemId, stats));
-    public void Start(AttackId id, Action<AttackResult> callback, int direction, bool rightHand = true)
+    public void Start(AttackId id, Action<AttackResult> callback, AttackDirection direction, bool rightHand = true)
     {
         ItemSlot slot = rightHand ? _api.World.Player.Entity.RightHandItemSlot : _api.World.Player.Entity.LeftHandItemSlot;
 
@@ -85,14 +85,14 @@ public sealed class MeleeSystemClient : MeleeSystem
     private readonly Dictionary<AttackId, MeleeAttack> _attacks = new();
     private long _rightHandAttackTimer = -1;
     private long _leftHandAttackTimer = -1;
-    private int _direction = 0;
+    private AttackDirection _direction = AttackDirection.Top;
 
     private void SendPacket(bool rightHand, IEnumerable<MeleeAttackDamagePacket> packets)
     {
         _clientChannel.SendPacket(new MeleeAttackPacket
         {
             RightHand = rightHand,
-            Direction = _direction,
+            Direction = (int)_direction,
             MeleeAttackDamagePackets = packets.ToArray()
         });
     }
@@ -157,7 +157,7 @@ public sealed class MeleeSystemServer : MeleeSystem
                 continue;
             }
 
-            damageType.Attack(player.Entity, targetEntity, packet.Direction, new(damagePacket.Position[0], damagePacket.Position[1], damagePacket.Position[2])); // @TODO: check distance and reach first
+            damageType.Attack(player.Entity, targetEntity, (AttackDirection)packet.Direction, new(damagePacket.Position[0], damagePacket.Position[1], damagePacket.Position[2])); // @TODO: check distance and reach first
 
             if (damageType.DurabilityDamage > 0)
             {

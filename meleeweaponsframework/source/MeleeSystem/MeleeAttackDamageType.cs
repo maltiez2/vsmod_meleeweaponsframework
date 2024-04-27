@@ -44,7 +44,7 @@ public class MeleeAttackDamageTypeStats
 
 public interface IDirectionalDamage
 {
-    public int Direction { get; set; }
+    public AttackDirection Direction { get; set; }
 }
 
 public interface ILocationalDamage
@@ -54,7 +54,7 @@ public interface ILocationalDamage
 
 public class MeleeAttackDamageSource : DamageSource, IDirectionalDamage, ILocationalDamage
 {
-    public int Direction { get; set; }
+    public AttackDirection Direction { get; set; }
     public Vector3 Position { get; set; }
 }
 
@@ -113,7 +113,7 @@ public class MeleeAttackDamageType : IHasLineCollider
         DurabilityDamage = stats.DurabilityDamage;
     }
 
-    public Vector3? TryAttack(IPlayer attacker, Entity target, int direction)
+    public Vector3? TryAttack(IPlayer attacker, Entity target, AttackDirection direction)
     {
         Vector3? collisionPoint = Collide(target);
 
@@ -123,7 +123,7 @@ public class MeleeAttackDamageType : IHasLineCollider
 
         return received ? collisionPoint : null;
     }
-    public bool Attack(Entity attacker, Entity target, int direction, Vector3 position)
+    public bool Attack(Entity attacker, Entity target, AttackDirection direction, Vector3 position)
     {
         bool damageReceived = target.ReceiveDamage(new MeleeAttackDamageSource()
         {

@@ -91,7 +91,7 @@ public sealed class MeleeAttack
         }
     }
 
-    public void Start(IPlayer player, int direction)
+    public void Start(IPlayer player, AttackDirection direction)
     {
         long entityId = player.Entity.EntityId;
 
@@ -164,7 +164,7 @@ public sealed class MeleeAttack
     private readonly HashSet<(Block block, Vector3 point)> _terrainCollisionsBuffer = new();
     private readonly HashSet<(Entity entity, Vector3 point)> _entitiesCollisionsBuffer = new();
     private readonly Dictionary<MeleeAttackDamageId, CollisionEffects> _damageTypesEffects = new();
-    private int _direction = 0;
+    private AttackDirection _direction = AttackDirection.Top;
 
     private IEnumerable<(Block block, Vector3 point)> CheckTerrainCollision(float progress)
     {

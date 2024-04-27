@@ -109,7 +109,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     {
         if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
 
-        MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction, mainHand));
+        MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction, mainHand), direction);
         Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
         state = (int)GenericMeleeWeaponState.Attacking;
 

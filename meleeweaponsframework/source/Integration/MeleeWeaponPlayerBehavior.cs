@@ -5,7 +5,6 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Util;
-using static OpenTK.Graphics.OpenGL.GL;
 
 namespace MeleeWeaponsFramework;
 
@@ -42,6 +41,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         _actionListener = frameworkSystem.ActionListener;
         _animationSystem = _api.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         _directionController = frameworkSystem.DirectionController;
+        _meleeBlockSystem = frameworkSystem.BlockSystemClient;
 
         if (_mainPlayer)
         {
@@ -52,7 +52,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     public override void OnGameTick(float deltaTime)
     {
         if (!_mainPlayer) return;
-        
+
         SetRenderDirectionCursorForMainHand();
         _directionController.OnGameTick();
         _ = CheckIfItemsInHandsChanged();
@@ -107,7 +107,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             _currentMainHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
 
             ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
-            if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+            if (stack == null || stack.Item is not IMeleeWeaponItem weapon) return;
             weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }
         else
@@ -115,7 +115,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             _currentOffHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
 
             ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
-            if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+            if (stack == null || stack.Item is not IMeleeWeaponItem weapon) return;
             weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }
     }
@@ -157,9 +157,10 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private const string _statCategory = "melee-weapon-player-behavior";
     private readonly ActionListener _actionListener;
     private readonly AttackDirectionController _directionController;
+    private readonly MeleeBlockSystemClient? _meleeBlockSystem;
 
-    private MeleeWeaponItem? _currentMainHandWeapon;
-    private MeleeWeaponItem? _currentOffHandWeapon;
+    private IMeleeWeaponItem? _currentMainHandWeapon;
+    private IMeleeWeaponItem? _currentOffHandWeapon;
     private int _currentMainHandItemId = -1;
     private int _currentOffHandItemId = -1;
     private long _idleTimer = -1;
@@ -172,13 +173,13 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
             .OfType<MeleeWeaponItem>()
             .Foreach(RegisterWeapon);
     }
-    private void RegisterWeapon(MeleeWeaponItem? weapon)
+    private void RegisterWeapon(IMeleeWeaponItem? weapon)
     {
         if (weapon is null) return;
-        
+
         Dictionary<ActionEventId, ActionEventCallbackDelegate> handlers = CollectHandlers(weapon);
 
-        int itemId = weapon.ItemId;
+        int itemId = weapon.WeaponItemId;
 
         foreach ((ActionEventId eventId, ActionEventCallbackDelegate callback) in handlers)
         {
@@ -248,6 +249,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private void ProcessMainHandItemChanged()
     {
         _currentMainHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
+        _meleeBlockSystem?.Stop();
 
         _currentMainHandWeapon?.OnDeselected(_player);
         _currentMainHandWeapon = null;
@@ -259,7 +261,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
 
-        if (stack == null || stack.Item is not MeleeWeaponItem weapon)
+        if (stack == null || stack.Item is not IMeleeWeaponItem weapon)
         {
             RenderingOffset.ResetOffset();
             return;
@@ -269,9 +271,9 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         weapon.OnSelected(_player.ActiveHandItemSlot, _player);
         _currentMainHandWeapon = weapon;
 
-        if (weapon.Attributes?["fpHandsOffset"].Exists == true)
+        if (stack.Item.Attributes?["fpHandsOffset"].Exists == true)
         {
-            RenderingOffset.SetOffset(weapon.Attributes["fpHandsOffset"].AsFloat());
+            RenderingOffset.SetOffset(stack.Item.Attributes["fpHandsOffset"].AsFloat());
         }
 
         ResetIdleTimer();
@@ -279,6 +281,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private void ProcessOffHandItemChanged()
     {
         _currentOffHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
+        _meleeBlockSystem?.Stop();
 
         _currentOffHandWeapon?.OnDeselected(_player);
         _currentOffHandWeapon = null;
@@ -290,7 +293,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
 
-        if (stack == null || stack.Item is not MeleeWeaponItem weapon) return;
+        if (stack == null || stack.Item is not IMeleeWeaponItem weapon) return;
 
         weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
         weapon.OnSelected(_player.LeftHandItemSlot, _player);
@@ -327,13 +330,13 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         _idleTimer = -1;
 
         ItemStack? stackMainHand = _player.ActiveHandItemSlot.Itemstack;
-        if (stackMainHand != null && stackMainHand.Item is MeleeWeaponItem weaponMainHand)
+        if (stackMainHand != null && stackMainHand.Item is IMeleeWeaponItem weaponMainHand)
         {
             weaponMainHand.IdleAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }
 
         ItemStack? stackOffHand = _player.LeftHandItemSlot.Itemstack;
-        if (stackOffHand != null && stackOffHand.Item is MeleeWeaponItem weaponOffHand)
+        if (stackOffHand != null && stackOffHand.Item is IMeleeWeaponItem weaponOffHand)
         {
             weaponOffHand.IdleAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }

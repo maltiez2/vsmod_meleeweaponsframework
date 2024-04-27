@@ -10,6 +10,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     public override void Start(ICoreAPI api)
     {
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
+        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeblock", typeof(MeleeBlockPlayerBehavior));
         api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
         api.RegisterItemClass("meleeweaponsframework:vanilla-spear-melee-weapon", typeof(VanillaSpear)); 
     }
@@ -20,6 +21,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         _throwSystemClient = new(api);
         _actionListener = new(api);
         _hackingSystemClient = new(api);
+        _meleeBlockSystemClient = new(api);
 
         _cursorRenderer = new(api);
         _directionController = new(api, _cursorRenderer);
@@ -33,6 +35,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         _meleeSystemServer = new(api);
         _throwSystemServer = new(api);
         _hackingSystemServer = new(api);
+        _meleeBlockSystemServer = new(api);
     }
 
     public override void Dispose()
@@ -49,6 +52,8 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     internal ThrowSystemServer? ThrowSystemServer => _throwSystemServer;
     internal HackingSystemClient? HackingSystemClient => _hackingSystemClient;
     internal HackingSystemServer? HackingSystemServer => _hackingSystemServer;
+    internal MeleeBlockSystemClient? BlockSystemClient => _meleeBlockSystemClient;
+    internal MeleeBlockSystemServer? BlockSystemServer => _meleeBlockSystemServer;
 
     private MeleeSystemClient? _meleeSystemClient;
     private ActionListener? _actionListener;
@@ -59,4 +64,6 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     private ThrowSystemServer? _throwSystemServer;
     private HackingSystemClient? _hackingSystemClient;
     private HackingSystemServer? _hackingSystemServer;
+    private MeleeBlockSystemClient? _meleeBlockSystemClient;
+    private MeleeBlockSystemServer? _meleeBlockSystemServer;
 }
