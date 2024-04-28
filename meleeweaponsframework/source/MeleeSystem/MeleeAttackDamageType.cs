@@ -4,6 +4,7 @@ using System.Numerics;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 
 namespace MeleeWeaponsFramework;
 
@@ -125,6 +126,23 @@ public class MeleeAttackDamageType : IHasLineCollider
     }
     public bool Attack(Entity attacker, Entity target, AttackDirection direction, Vector3 position)
     {
+        if (attacker.Api is ICoreServerAPI serverApi && attacker is EntityPlayer playerAttacker)
+        {
+            if (target is EntityPlayer && (!serverApi.Server.Config.AllowPvP || !playerAttacker.Player.HasPrivilege("attackplayers"))) return false;
+            if (target is not EntityPlayer && !playerAttacker.Player.HasPrivilege("attackcreatures")) return false;
+        }
+
+        string attackerId = attacker.Code.ToString();
+        if (attacker is EntityPlayer player)
+        {
+            attackerId = player.GetName();
+        }
+        string targetId = target.Code.ToString();
+        if (target is EntityPlayer playerTarget)
+        {
+            targetId = playerTarget.GetName();
+        }
+
         bool damageReceived = target.ReceiveDamage(new MeleeAttackDamageSource()
         {
             Source = attacker is EntityPlayer ? EnumDamageSource.Player : EnumDamageSource.Entity,
@@ -135,6 +153,8 @@ public class MeleeAttackDamageType : IHasLineCollider
             Direction = direction,
             Position = position
         }, Damage);
+
+        if (attacker.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(attacker.Api, this, $"Entity '{attackerId}' attacks entity '{targetId}' from direction '{direction}'. Target receives '{damageReceived}' damage.");
 
         bool received = damageReceived || Damage <= 0;
 

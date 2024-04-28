@@ -140,14 +140,28 @@ public class MeleeBlock
     {
         Entity? source = damageSource.SourceEntity ?? damageSource.CauseEntity;
 
-        if (source != null && !CheckDirection(entity, source)) return;
-        
+        if (source != null && !CheckCoverage(entity, source)) return;
+
+        string attackerId = source?.Code.ToString() ?? "None";
+        if (source is EntityPlayer player)
+        {
+            attackerId = player.GetName();
+        }
+        string targetId = entity.Code.ToString();
+        if (entity is EntityPlayer playerTarget)
+        {
+            targetId = playerTarget.GetName();
+        }
+
         if (damageSource is IDirectionalDamage directionDamage && !Directions[directionIndex].Test(directionDamage.Direction))
         {
+            if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', failed direction check on blocking. Block direction: {Directions[directionIndex]}, attack direction: {directionDamage.Direction}.");
             return;
         }
 
         damage *= (1 - DamageReduction);
+
+        if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', successfully blocked {DamageReduction * 100}% of incoming damage reducing it to: {damage}.");
 
         if (BlockSound != null) entity.Api.World.PlaySoundAt(BlockSound, entity);
     }
@@ -156,14 +170,28 @@ public class MeleeBlock
     {
         Entity? source = damageSource.SourceEntity ?? damageSource.CauseEntity;
 
-        if (source != null && !CheckDirection(entity, source)) return;
+        if (source != null && !CheckCoverage(entity, source)) return;
+
+        string attackerId = source?.Code.ToString() ?? "None";
+        if (source is EntityPlayer player)
+        {
+            attackerId = player.GetName();
+        }
+        string targetId = entity.Code.ToString();
+        if (entity is EntityPlayer playerTarget)
+        {
+            targetId = playerTarget.GetName();
+        }
 
         if (damageSource is IDirectionalDamage directionDamage && !DirectionlessPerfectBlock && !Directions[directionIndex].Test(directionDamage.Direction))
         {
+            if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', failed direction check on perfect blocking. Block direction: {Directions[directionIndex]}, attack direction: {directionDamage.Direction}.");
             return;
         }
 
         damage = 0;
+
+        if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', successfully performed perfect block.");
 
         if (PerfectBlockSound != null) entity.Api.World.PlaySoundAt(PerfectBlockSound, entity);
     }
@@ -173,7 +201,7 @@ public class MeleeBlock
         if (CancelSound != null && entity.Api.Side == EnumAppSide.Server) entity.Api.World.PlaySoundAt(CancelSound, entity);
     }
 
-    protected virtual bool CheckDirection(Entity receiver, Entity source)
+    protected virtual bool CheckCoverage(Entity receiver, Entity source)
     {
         Vec3f sourceEyesPosition = source.ServerPos.XYZFloat.Add(0, (float)source.LocalEyePos.Y, 0);
         Vec3f attackDirection = sourceEyesPosition - receiver.LocalEyePos.ToVec3f();
@@ -181,6 +209,24 @@ public class MeleeBlock
         Vec3f direction = DirectionOffset.ToReferenceFrame(playerViewDirection, attackDirection);
         DirectionOffset offset = new(direction, new Vec3f(0, 0, 1));
 
-        return Coverage.Check(offset);
+        string attackerId = source.Code.ToString();
+        if (source is EntityPlayer player)
+        {
+            attackerId = player.GetName();
+        }
+        string targetId = receiver.Code.ToString();
+        if (receiver is EntityPlayer playerTarget)
+        {
+            targetId = playerTarget.GetName();
+        }
+
+        bool result = Coverage.Check(offset);
+
+        if (!result && receiver.Api.Side == EnumAppSide.Server)
+        {
+            LoggerUtil.Verbose(receiver.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', failed coverage check. Pitch: {offset.Pitch}, yaw: {offset.Yaw}.");
+        }
+
+        return result;
     }
 }
