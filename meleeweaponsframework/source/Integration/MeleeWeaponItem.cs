@@ -57,7 +57,7 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
         if (api is ICoreServerAPI serverApi)
         {
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
-            BlockSystemServer = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
+            ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
 
         if (api is not ICoreClientAPI clientAPI) return;
@@ -96,7 +96,7 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
     protected MeleeSystemClient? MeleeSystem { get; private set; }
     protected MeleeSystemServer? ServerMeleeSystem { get; private set; }
     protected MeleeBlockSystemClient? BlockSystem { get; private set; }
-    protected MeleeBlockSystemServer? BlockSystemServer { get; private set; }
+    protected MeleeBlockSystemServer? ServerBlockSystem { get; private set; }
     protected ICoreClientAPI? Api { get; private set; }
     protected MeleeWeaponParameters Parameters { get; private set; } = new();
 }

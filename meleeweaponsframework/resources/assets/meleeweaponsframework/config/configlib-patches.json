@@ -9,10 +9,15 @@
         "3/enabled": "Vanilla_spears_rendering_patch"
       },
       "meleeweaponsframework:patches/weapons/swords.json": {
-        "0/enabled": "Vanilla_spears_patch",
-        "1/enabled": "Vanilla_spears_patch",
-        "2/enabled": "Vanilla_spears_patch",
+        "0/enabled": "Vanilla_swords_patch",
+        "1/enabled": "Vanilla_swords_patch",
+        "2/enabled": "Vanilla_swords_patch",
         "3/enabled": "Vanilla_swords_rendering_patch"
+      },
+      "meleeweaponsframework:patches/weapons/shields.json": {
+        "0/enabled": "Vanilla_shields_patch",
+        "1/enabled": "Vanilla_shields_patch",
+        "2/enabled": "Vanilla_shields_patch"
       }
     }
   },
@@ -33,6 +38,13 @@
       "ingui": "vanilla-swords-patch",
       "type": "boolean",
       "comment": "vanilla-swords-patch-desc",
+      "default": true
+    },
+    {
+      "code": "Vanilla_shields_patch",
+      "ingui": "vanilla-shields-patch",
+      "type": "boolean",
+      "comment": "vanilla-shields-patch-desc",
       "default": true
     },
     {

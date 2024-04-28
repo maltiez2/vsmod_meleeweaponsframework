@@ -20,12 +20,6 @@ public class GenericShieldParameters : MeleeWeaponParameters
     public string? CancelBlockSound { get; set; }
 }
 
-public enum GenericShieldState
-{
-    Idle = 0,
-    Blocking
-}
-
 public class GenericShield : MeleeShieldItem
 {
     public override void OnLoaded(ICoreAPI api)
@@ -66,14 +60,15 @@ public class GenericShield : MeleeShieldItem
     public override void OnDeselected(EntityPlayer player)
     {
         MeleeSystem?.Stop(rightHand: true);
+        Api?.World.UnregisterCallback(CooldownTimer);
     }
 
-    public override void OnHeldAttackStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandHandling handling)
+    public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
     {
         handling = EnumHandHandling.PreventDefault;
     }
 
-    public override bool OnHeldAttackStep(float secondsPassed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSelection, EntitySelection entitySel)
+    public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
     {
         return false;
     }
@@ -83,14 +78,14 @@ public class GenericShield : MeleeShieldItem
     protected GenericShieldParameters GenericParameters { get; private set; } = new();
     protected RunParameters[] EaseInAnimationParameters { get; private set; } = Array.Empty<RunParameters>();
     protected RunParameters[] EaseOutAnimationParameters { get; private set; } = Array.Empty<RunParameters>();
+    protected long CooldownTimer { get; set; } = 0;
 
-    [ActionEventHandler(EnumEntityAction.Right, ActionState.Pressed)]
-    protected virtual bool OnBlock(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
+    protected virtual bool OnBlock(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (mainHand) return false;
-        
-        if (state != (int)GenericShieldState.Idle) return true;
-        state = (int)GenericShieldState.Blocking;
+        if (mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+
+        state = MeleeWeaponState.Active;
 
         Behavior?.PlayAnimation(BlockAnimation, mainHand, false, null, EaseInAnimationParameters);
         BlockSystem?.Start(BlockId, 0, mainHand);
@@ -98,14 +93,15 @@ public class GenericShield : MeleeShieldItem
         return true;
     }
 
-    [ActionEventHandler(EnumEntityAction.Right, ActionState.Released)]
-    protected virtual bool OnEase(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Released)]
+    protected virtual bool OnEase(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (mainHand) return false;
 
-        if (state != (int)GenericShieldState.Blocking) return true;
-        state = (int)GenericShieldState.Idle;
+        if (state != MeleeWeaponState.Active) return true;
+        state = MeleeWeaponState.Cooldown;
 
+        CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), (int)GenericParameters.BlockEaseOutTimeMs) ?? 0;
         Behavior?.StopAnimation(mainHand, true, null, EaseOutAnimationParameters);
         BlockSystem?.Stop();
 

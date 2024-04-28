@@ -22,12 +22,6 @@ public class GenericMeleeWeaponParameters : MeleeWeaponParameters
     public string AttackDamageType { get; set; } = "BluntAttack";
 }
 
-public enum GenericMeleeWeaponState
-{
-    Idle = 0,
-    Attacking
-}
-
 public class GenericMeleeWeapon : MeleeWeaponItem
 {
     public override void OnLoaded(ICoreAPI api)
@@ -105,13 +99,13 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     protected RunParameters[] AnimationParameters { get; private set; } = Array.Empty<RunParameters>();
 
     [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
-    protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
+        if (!mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
 
         MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction, mainHand), direction);
         Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
-        state = (int)GenericMeleeWeaponState.Attacking;
+        state = MeleeWeaponState.Active;
 
         return true;
     }
@@ -121,7 +115,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
         if (result.Result == AttackResultFlag.Finished)
         {
             MeleeSystem?.Stop();
-            Behavior?.SetState((int)GenericMeleeWeaponState.Idle);
+            Behavior?.SetState(MeleeWeaponState.Idle);
         }
     }
 }

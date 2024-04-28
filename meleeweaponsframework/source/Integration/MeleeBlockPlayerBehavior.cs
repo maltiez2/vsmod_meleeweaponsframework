@@ -147,9 +147,9 @@ public class MeleeBlock
             return;
         }
 
-        damage *= DamageReduction;
+        damage *= (1 - DamageReduction);
 
-        if (BlockSound != null && entity.Api.Side == EnumAppSide.Server) entity.Api.World.PlaySoundAt(BlockSound, entity);
+        if (BlockSound != null) entity.Api.World.PlaySoundAt(BlockSound, entity);
     }
 
     public void OnPerfectBlock(Entity entity, DamageSource damageSource, ref float damage, int directionIndex)
@@ -165,7 +165,7 @@ public class MeleeBlock
 
         damage = 0;
 
-        if (PerfectBlockSound != null && entity.Api.Side == EnumAppSide.Server) entity.Api.World.PlaySoundAt(PerfectBlockSound, entity);
+        if (PerfectBlockSound != null) entity.Api.World.PlaySoundAt(PerfectBlockSound, entity);
     }
 
     public void OnCancel(Entity entity)

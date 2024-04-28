@@ -8,12 +8,19 @@ using Vintagestory.API.Util;
 
 namespace MeleeWeaponsFramework;
 
+public enum MeleeWeaponState
+{
+    Idle = 0,
+    Active = 1,
+    Cooldown = 2
+}
+
 public class MeleeWeaponPlayerBehavior : EntityBehavior
 {
     public TimeSpan AnimationsEaseOutTime { get; set; } = TimeSpan.FromMilliseconds(500);
     public TimeSpan DefaultIdleAnimationDelay { get; set; } = TimeSpan.FromSeconds(5);
 
-    public delegate bool ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction);
+    public delegate bool ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction);
 
     public MeleeWeaponPlayerBehavior(Entity entity) : base(entity)
     {
@@ -133,7 +140,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         _player.Stats.Set(_statCategory, stat, value);
     }
-    public void SetState(int state, bool mainHand = true)
+    public void SetState(MeleeWeaponState state, bool mainHand = true)
     {
         if (!_mainPlayer) return;
         if (mainHand)
@@ -144,6 +151,10 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         {
             _offHandState = state;
         }
+    }
+    public MeleeWeaponState GetState(bool mainHand = true)
+    {
+        return mainHand ? _mainHandState : _offHandState;
     }
 
     private readonly bool _mainPlayer = false;
@@ -164,13 +175,13 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     private int _currentMainHandItemId = -1;
     private int _currentOffHandItemId = -1;
     private long _idleTimer = -1;
-    private int _mainHandState = 0;
-    private int _offHandState = 0;
+    private MeleeWeaponState _mainHandState = 0;
+    private MeleeWeaponState _offHandState = 0;
 
     private void RegisterWeapons()
     {
         _api.World.Items
-            .OfType<MeleeWeaponItem>()
+            .OfType<IMeleeWeaponItem>()
             .Foreach(RegisterWeapon);
     }
     private void RegisterWeapon(IMeleeWeaponItem? weapon)

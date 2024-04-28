@@ -118,6 +118,6 @@ public sealed class MeleeBlockSystemServer : MeleeBlockSystem
 
     private void HandlePacket(IServerPlayer player, MeleeBlockStopPacket packet)
     {
-        player.Entity.GetBehavior<MeleeBlockPlayerBehavior>().Stop();
+        player.Entity.GetBehavior<MeleeBlockPlayerBehavior>()?.Stop();
     }
 }

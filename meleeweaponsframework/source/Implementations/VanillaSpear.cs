@@ -83,9 +83,9 @@ public class VanillaSpear : GenericMeleeWeapon
     protected const float TyronMagicNumber_1 = 0.15f;
 
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
-    protected virtual bool OnAim(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    protected virtual bool OnAim(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
+        if (!mainHand || state != MeleeWeaponState.Idle) return true;
 
         ThrowSystemClient?.Aim();
         AimStartTime = Api?.World.ElapsedMilliseconds ?? 0;
@@ -95,9 +95,9 @@ public class VanillaSpear : GenericMeleeWeapon
     }
 
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Released)]
-    protected virtual bool OnThrow(ItemSlot slot, EntityPlayer player, ref int state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    protected virtual bool OnThrow(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != (int)GenericMeleeWeaponState.Idle) return true;
+        if (!mainHand || state != MeleeWeaponState.Idle) return true;
 
         long currentTime = Api?.World.ElapsedMilliseconds ?? 0;
         if (currentTime - AimStartTime < SpearParameters.AimMinimumDurationMs)
@@ -124,7 +124,7 @@ public class VanillaSpear : GenericMeleeWeapon
                 if (HackingSystemClient?.Hack(entity, mainHand) == true)
                 {
                     MeleeSystem?.Stop();
-                    Behavior?.SetState((int)GenericMeleeWeaponState.Idle);
+                    Behavior?.SetState(MeleeWeaponState.Idle);
                     return;
                 }
             }

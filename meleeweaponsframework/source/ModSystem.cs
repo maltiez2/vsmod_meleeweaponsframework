@@ -23,6 +23,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         _actionListener = new(api);
         _hackingSystemClient = new(api);
         _meleeBlockSystemClient = new(api);
+        _particleEffectsManager = new(api);
 
         _cursorRenderer = new(api);
         _directionController = new(api, _cursorRenderer);
@@ -37,6 +38,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         _throwSystemServer = new(api);
         _hackingSystemServer = new(api);
         _meleeBlockSystemServer = new(api);
+        _particleEffectsManager = new(api);
     }
 
     public override void Dispose()
@@ -44,17 +46,18 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         new Harmony("meleeweaponsframework").UnpatchAll();
     }
 
-    internal MeleeSystemClient? MeleeSystemClient => _meleeSystemClient;
-    internal ActionListener? ActionListener => _actionListener;
-    internal MeleeSystemServer? MeleeSystemServer => _meleeSystemServer;
-    internal DirectionCursorRenderer? CursorRenderer => _cursorRenderer;
-    internal AttackDirectionController? DirectionController => _directionController;
-    internal ThrowSystemClient? ThrowSystemClient => _throwSystemClient;
-    internal ThrowSystemServer? ThrowSystemServer => _throwSystemServer;
-    internal HackingSystemClient? HackingSystemClient => _hackingSystemClient;
-    internal HackingSystemServer? HackingSystemServer => _hackingSystemServer;
-    internal MeleeBlockSystemClient? BlockSystemClient => _meleeBlockSystemClient;
-    internal MeleeBlockSystemServer? BlockSystemServer => _meleeBlockSystemServer;
+    public MeleeSystemClient? MeleeSystemClient => _meleeSystemClient;
+    public ActionListener? ActionListener => _actionListener;
+    public MeleeSystemServer? MeleeSystemServer => _meleeSystemServer;
+    public DirectionCursorRenderer? CursorRenderer => _cursorRenderer;
+    public AttackDirectionController? DirectionController => _directionController;
+    public ThrowSystemClient? ThrowSystemClient => _throwSystemClient;
+    public ThrowSystemServer? ThrowSystemServer => _throwSystemServer;
+    public HackingSystemClient? HackingSystemClient => _hackingSystemClient;
+    public HackingSystemServer? HackingSystemServer => _hackingSystemServer;
+    public MeleeBlockSystemClient? BlockSystemClient => _meleeBlockSystemClient;
+    public MeleeBlockSystemServer? BlockSystemServer => _meleeBlockSystemServer;
+    public ParticleEffectsManager? ParticleEffectsManager => _particleEffectsManager;
 
     private MeleeSystemClient? _meleeSystemClient;
     private ActionListener? _actionListener;
@@ -67,4 +70,5 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     private HackingSystemServer? _hackingSystemServer;
     private MeleeBlockSystemClient? _meleeBlockSystemClient;
     private MeleeBlockSystemServer? _meleeBlockSystemServer;
+    private ParticleEffectsManager? _particleEffectsManager;
 }
