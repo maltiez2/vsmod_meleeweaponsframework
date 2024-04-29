@@ -1,5 +1,6 @@
 ﻿using AnimationManagerLib;
 using AnimationManagerLib.API;
+using System.Collections.Generic;
 using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -188,22 +189,25 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     {
         if (weapon is null) return;
 
-        Dictionary<ActionEventId, ActionEventCallbackDelegate> handlers = CollectHandlers(weapon);
+        Dictionary<ActionEventId, List<ActionEventCallbackDelegate>> handlers = CollectHandlers(weapon);
 
         int itemId = weapon.WeaponItemId;
 
-        foreach ((ActionEventId eventId, ActionEventCallbackDelegate callback) in handlers)
+		foreach ((ActionEventId eventId, List<ActionEventCallbackDelegate> callbacks) in handlers)
         {
-            _actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
+            callbacks.ForEach(callback =>
+            {
+				_actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
+			});
         }
 
         weapon.OnRegistered(this, _api);
     }
-    private static Dictionary<ActionEventId, ActionEventCallbackDelegate> CollectHandlers(object owner)
+    private static Dictionary<ActionEventId, List<ActionEventCallbackDelegate>> CollectHandlers(object owner)
     {
         IEnumerable<MethodInfo> methods = owner.GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Where(method => method.GetCustomAttributes(typeof(ActionEventHandlerAttribute), true).Any());
 
-        Dictionary<ActionEventId, ActionEventCallbackDelegate> handlers = new();
+        Dictionary<ActionEventId, List<ActionEventCallbackDelegate>> handlers = new();
         foreach (MethodInfo method in methods)
         {
             if (method.GetCustomAttributes(typeof(ActionEventHandlerAttribute), true)[0] is not ActionEventHandlerAttribute attribute) continue;
@@ -213,7 +217,21 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
                 throw new InvalidOperationException($"Handler should have same signature as 'ActionEventCallbackDelegate' delegate.");
             }
 
-            handlers.Add(attribute.Event, handler);
+			List<ActionEventCallbackDelegate>? callbackDelegates;
+			if (handlers.TryGetValue(attribute.Event, out callbackDelegates))
+            {
+                callbackDelegates.Add(handler);
+			}
+            else
+            {
+				callbackDelegates = new()
+				{
+					handler
+				};
+
+				handlers.Add(attribute.Event, callbackDelegates);
+			}
+            
         }
 
         return handlers;
