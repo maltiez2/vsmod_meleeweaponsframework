@@ -22,7 +22,7 @@ public class GenericMeleeWeaponParameters : MeleeWeaponParameters
     public string AttackDamageType { get; set; } = "BluntAttack";
 }
 
-public class GenericMeleeWeapon : MeleeWeaponItem, IMeleeWeaponItem
+public class GenericMeleeWeapon : MeleeWeaponItem
 {
     public override void OnLoaded(ICoreAPI api)
     {
