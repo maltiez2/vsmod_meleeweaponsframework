@@ -96,12 +96,14 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         {
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
-        }
+		}
 
         if (api is not ICoreClientAPI clientAPI) return;
 
-        MeleeSystem = clientAPI.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
-        BlockSystem = clientAPI.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+		Api = clientAPI;
+
+		MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+        BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
 
         ConstructAnimations();
         RegisterAttacks();
@@ -175,7 +177,6 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     public virtual void OnRegistered(MeleeWeaponPlayerBehavior behavior, ICoreClientAPI api)
     {
         Behavior = behavior;
-        Api = api;
     }
 
     public override void OnHeldRenderOpaque(ItemSlot inSlot, IClientPlayer byPlayer)
