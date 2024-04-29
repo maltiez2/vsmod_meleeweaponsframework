@@ -217,12 +217,12 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected DirectionsConfiguration DirectionsConfigurationTwoHanded { get; set; } = DirectionsConfiguration.None;
 
     protected LineSegmentCollider DebugCollider { get; set; }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> AttacksAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> AttacksAnimationsTwoHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParriesAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParriesAnimationsTwoHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParriesEaseOutAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParriesEaseOutAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsTwoHanded { get; set; } = new();
 
     protected Dictionary<AttackDirection, int> ParriesCooldownsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, int> ParriesCooldownsTwoHanded { get; set; } = new();
@@ -249,7 +249,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         if (!AttacksOneHanded.ContainsKey(direction)) return false;
 
         MeleeSystem?.Start(AttacksOneHanded[direction], result => OnAttackCallback(result, slot, direction, mainHand), direction);
-        Behavior?.PlayAnimation(AttacksAnimationsOneHanded[direction].animation, true, true, null, AttacksAnimationsOneHanded[direction].paremters);
+        Behavior?.PlayAnimation(AttacksAnimationsOneHanded[direction].animation, true, true, null, AttacksAnimationsOneHanded[direction].parameters);
         state = MeleeWeaponState.Active;
 
         return true;
@@ -266,7 +266,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         if (!AttacksTwoHanded.ContainsKey(direction)) return false;
 
         MeleeSystem?.Start(AttacksTwoHanded[direction], result => OnAttackCallback(result, slot, direction, mainHand), direction);
-        Behavior?.PlayAnimation(AttacksAnimationsTwoHanded[direction].animation, true, true, null, AttacksAnimationsTwoHanded[direction].paremters);
+        Behavior?.PlayAnimation(AttacksAnimationsTwoHanded[direction].animation, true, true, null, AttacksAnimationsTwoHanded[direction].parameters);
         state = MeleeWeaponState.Active;
 
         return true;
@@ -292,7 +292,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         state = MeleeWeaponState.Active;
 
-        Behavior?.PlayAnimation(ParriesAnimationsOneHanded[direction].animation, mainHand, false, null, ParriesAnimationsOneHanded[direction].paremters);
+        Behavior?.PlayAnimation(ParriesAnimationsOneHanded[direction].animation, mainHand, false, null, ParriesAnimationsOneHanded[direction].parameters);
         BlockSystem?.Start(BlockIdOneHanded, (int)direction, mainHand);
 
         return true;
@@ -310,7 +310,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         state = MeleeWeaponState.Active;
 
-        Behavior?.PlayAnimation(ParriesAnimationsTwoHanded[direction].animation, mainHand, false, null, ParriesAnimationsTwoHanded[direction].paremters);
+        Behavior?.PlayAnimation(ParriesAnimationsTwoHanded[direction].animation, mainHand, false, null, ParriesAnimationsTwoHanded[direction].parameters);
         BlockSystem?.Start(BlockIdTwoHanded, (int)direction, mainHand);
 
         return true;
@@ -326,7 +326,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         state = MeleeWeaponState.Cooldown;
 
         CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), ParriesCooldownsOneHanded[direction]) ?? 0;
-        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsOneHanded[direction].paremters);
+        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsOneHanded[direction].parameters);
         BlockSystem?.Stop();
 
         return true;
@@ -342,7 +342,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         state = MeleeWeaponState.Cooldown;
 
         CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), ParriesCooldownsTwoHanded[direction]) ?? 0;
-        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsTwoHanded[direction].paremters);
+        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsTwoHanded[direction].parameters);
         BlockSystem?.Stop();
 
         return true;
