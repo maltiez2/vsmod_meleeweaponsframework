@@ -13,7 +13,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeblock", typeof(MeleeBlockPlayerBehavior));
         api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
         api.RegisterItemClass("meleeweaponsframework:generic-shield", typeof(GenericShield));
-        api.RegisterItemClass("meleeweaponsframework:vanilla-spear-melee-weapon", typeof(VanillaSpear)); 
+        api.RegisterItemClass("meleeweaponsframework:vanilla-spear-melee-weapon", typeof(VanillaSpear));
     }
 
     public override void StartClientSide(ICoreClientAPI api)

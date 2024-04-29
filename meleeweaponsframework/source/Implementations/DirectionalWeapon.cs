@@ -24,7 +24,10 @@ public class DirectionalWeaponParameters
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksOneHanded { get; set; } = new();
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksTwoHanded { get; set; } = new();
 
-    public bool OnlyDefaultGripAllowed { get; set; } = true;
+    public bool StopOnCollisionWithTerrain { get; set; } = false;
+    public bool StopOnCollisionWithEntity { get; set; } = false;
+
+    public bool CanChangeGrip { get; set; } = false;
     public string DefaultGrip { get; set; } = "OneHanded";
     public float GripChangeCooldownMs { get; set; } = 200;
     public bool DirectionlessPerfectBlockOneHanded { get; set; }
@@ -106,9 +109,42 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
     }
+    public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
+    {
+        List<WorldInteraction> result = new();
+        if (CanParry)
+        {
+            result.Add(new()
+            {
+                ActionLangCode = "meleeweaponsframework:interaction-parry",
+                MouseButton = EnumMouseButton.Right
+            });
+        }
+        if (CanAttack)
+        {
+            result.Add(new()
+            {
+                ActionLangCode = "meleeweaponsframework:interaction-attack",
+                MouseButton = EnumMouseButton.Left
+            });
+        }
+        if (DirectionalWeaponParameters.CanChangeGrip)
+        {
+            result.Add(new()
+            {
+                ActionLangCode = "meleeweaponsframework:interaction-change-grip",
+                MouseButton = EnumMouseButton.Right,
+                HotKeyCode = "ctrl"
+            });
+        }
+
+        return result.ToArray();
+    }
 
     public virtual void OnSelected(ItemSlot slot, EntityPlayer player)
     {
+        if (!DirectionalWeaponParameters.CanChangeGrip) return;
+        
         ItemSlot otherHandSlot;
         bool mainHand = false;
         if (player.RightHandItemSlot != slot)
@@ -197,6 +233,8 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected long CooldownTimer { get; set; } = 0;
     protected GripType DefaultGrip { get; set; } = GripType.OneHanded;
     protected GripType Grip { get; set; } = GripType.OneHanded;
+    protected bool CanParry => Grip == GripType.OneHanded ? ParriesAnimationsOneHanded.Any() : ParriesAnimationsTwoHanded.Any();
+    protected bool CanAttack => Grip == GripType.OneHanded ? AttacksAnimationsOneHanded.Any() : AttacksAnimationsTwoHanded.Any();
 
     [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttackOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
@@ -311,6 +349,8 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
     protected virtual bool OnChangeGrip(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
+        if (!DirectionalWeaponParameters.CanChangeGrip) return false;
+
         if (AltPressed() || !eventData.Modifiers.Contains(EnumEntityAction.CtrlKey)) return false;
 
         ChangeGrip(mainHand);
@@ -318,6 +358,17 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         return true;
     }
 
+    protected virtual void ChangeGrip(bool mainHand)
+    {
+        if (Behavior == null) return;
+
+        Grip = Grip == GripType.OneHanded ? GripType.TwoHanded : GripType.OneHanded;
+        MeleeSystem?.Stop(rightHand: mainHand);
+        BlockSystem?.Stop();
+        Behavior.SetState(MeleeWeaponState.Cooldown, mainHand);
+        CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), (int)DirectionalWeaponParameters.GripChangeCooldownMs) ?? 0;
+        Behavior?.PlayAnimation(ReadyAnimation, mainHand);
+    }
     protected bool AltPressed() => (Api?.Input.KeyboardKeyState[(int)GlKeys.AltLeft] ?? false) || (Api?.Input.KeyboardKeyState[(int)GlKeys.AltRight] ?? false);
 
     protected void ConstructAnimations()
@@ -384,18 +435,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         BlockSystem?.Register(BlockIdOneHanded, blockOneHanded);
         BlockSystem?.Register(BlockIdTwoHanded, blockTwoHanded);
     }
-
-    protected virtual void ChangeGrip(bool mainHand)
-    {
-        if (Behavior == null) return;
-
-        Grip = Grip == GripType.OneHanded ? GripType.TwoHanded : GripType.OneHanded;
-        MeleeSystem?.Stop(rightHand: mainHand);
-        BlockSystem?.Stop();
-        Behavior.SetState(MeleeWeaponState.Cooldown, mainHand);
-        CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), (int)DirectionalWeaponParameters.GripChangeCooldownMs) ?? 0;
-        Behavior?.PlayAnimation(ReadyAnimation, mainHand);
-    }
+    
     protected static Dictionary<AttackDirection, MeleeAttackStats> ParseAttacksFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks, float maxReach)
     {
         Dictionary<AttackDirection, MeleeAttackStats> result = new();

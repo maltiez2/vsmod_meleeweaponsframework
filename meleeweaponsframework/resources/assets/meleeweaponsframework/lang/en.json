@@ -9,5 +9,9 @@
     "vanilla-swords-patch-desc": "Adds new collision based hit detrection system to vanilla swords",
     "vanilla-shields-patch-desc": "Changes how block works for vanilla shields. Now they dont provide passive protection, instead you have to press RMB to block, and if you block right before enemy attack it will block all damage.",
     "vanilla-spears-rednering-desc": "Changes rendering for spears so they will clip into enemies and terrain, it makes it easier to jusdje distance",
-    "vanilla-swords-rednering-desc": "Changes rendering for swords so they will clip into enemies and terrain, it makes it easier to jusdje distance"
+    "vanilla-swords-rednering-desc": "Changes rendering for swords so they will clip into enemies and terrain, it makes it easier to jusdje distance",
+
+    "interaction-parry": "Parry with weapon",
+    "interaction-attack": "Attack with weapon",
+    "interaction-change-grip": "Change weapon grip (requires empty other hand to be empty)"
 }
