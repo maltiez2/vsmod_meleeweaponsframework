@@ -346,7 +346,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
     {
         ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
 
-        if (stack == null || stack.Item is not MeleeWeaponItem weapon)
+        if (stack == null || stack.Item is not IMeleeWeaponItem weapon)
         {
             _directionController.DirectionsConfiguration = DirectionsConfiguration.None;
             return;

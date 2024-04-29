@@ -13,10 +13,11 @@
             "AttackDamageType": "SlashingAttack",
             "DirectionsConfigurationOneHanded": "Triangle",
             "DirectionsConfigurationTwoHanded": "TopBottom",
+			"CanChangeGrip": true,
             "AttacksOneHanded": {
                 "Top": {					
                     "AttackAnimationByType": {
-                        "*": "falx"
+                        "*": "meleeweaponsframework-spear-hit"
                     },
                     "AttackAnimationWindupFrameByType": {
                         "*": 4
@@ -114,7 +115,7 @@
             "AttacksTwoHanded": {
                 "Top": {
                     "AttackAnimationByType": {
-                        "*": "falx"
+                        "*": "meleeweaponsframework-spear-hit"
                     },
                     "AttackAnimationWindupFrameByType": {
                         "*": 4
