@@ -84,7 +84,7 @@ public sealed class AttackDirectionController
         {
             angle += 360;
         }
-        int direction = GetDirectionNumber(angle, DivideCircle((int)DirectionsConfiguration, - 360f / (int)DirectionsConfiguration / 2)) - 1;
+        int direction = GetDirectionNumber(angle, DivideCircle((int)DirectionsConfiguration, -360f / (int)DirectionsConfiguration / 2)) - 1;
 
         float delta = _directionQueue.Last().DeltaPitch * _directionQueue.Last().DeltaPitch + _directionQueue.Last().DeltaYaw * _directionQueue.Last().DeltaYaw;
 

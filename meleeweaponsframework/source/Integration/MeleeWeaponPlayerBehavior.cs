@@ -193,12 +193,12 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
 
         int itemId = weapon.WeaponItemId;
 
-		foreach ((ActionEventId eventId, List<ActionEventCallbackDelegate> callbacks) in handlers)
+        foreach ((ActionEventId eventId, List<ActionEventCallbackDelegate> callbacks) in handlers)
         {
             callbacks.ForEach(callback =>
             {
-				_actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
-			});
+                _actionListener.Subscribe(eventId, (eventData) => HandleActionEvent(eventData, itemId, callback));
+            });
         }
 
         weapon.OnRegistered(this, _api);
@@ -217,21 +217,21 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
                 throw new InvalidOperationException($"Handler should have same signature as 'ActionEventCallbackDelegate' delegate.");
             }
 
-			List<ActionEventCallbackDelegate>? callbackDelegates;
-			if (handlers.TryGetValue(attribute.Event, out callbackDelegates))
+            List<ActionEventCallbackDelegate>? callbackDelegates;
+            if (handlers.TryGetValue(attribute.Event, out callbackDelegates))
             {
                 callbackDelegates.Add(handler);
-			}
+            }
             else
             {
-				callbackDelegates = new()
-				{
-					handler
-				};
+                callbackDelegates = new()
+                {
+                    handler
+                };
 
-				handlers.Add(attribute.Event, callbackDelegates);
-			}
-            
+                handlers.Add(attribute.Event, callbackDelegates);
+            }
+
         }
 
         return handlers;

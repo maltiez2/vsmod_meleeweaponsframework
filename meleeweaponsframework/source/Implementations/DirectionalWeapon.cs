@@ -96,13 +96,13 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         {
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
-		}
+        }
 
         if (api is not ICoreClientAPI clientAPI) return;
 
-		Api = clientAPI;
+        Api = clientAPI;
 
-		MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+        MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
         BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
 
         ConstructAnimations();
@@ -146,7 +146,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     public virtual void OnSelected(ItemSlot slot, EntityPlayer player)
     {
         if (!DirectionalWeaponParameters.CanChangeGrip) return;
-        
+
         ItemSlot otherHandSlot;
         bool mainHand = false;
         if (player.RightHandItemSlot != slot)
@@ -436,7 +436,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         BlockSystem?.Register(BlockIdOneHanded, blockOneHanded);
         BlockSystem?.Register(BlockIdTwoHanded, blockTwoHanded);
     }
-    
+
     protected static Dictionary<AttackDirection, MeleeAttackStats> ParseAttacksFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks, float maxReach)
     {
         Dictionary<AttackDirection, MeleeAttackStats> result = new();
