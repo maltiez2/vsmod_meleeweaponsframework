@@ -12,6 +12,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeblock", typeof(MeleeBlockPlayerBehavior));
         api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
+        api.RegisterItemClass("meleeweaponsframework:directional-weapon", typeof(DirectionalWeapon));
         api.RegisterItemClass("meleeweaponsframework:generic-shield", typeof(GenericShield));
         api.RegisterItemClass("meleeweaponsframework:vanilla-spear-melee-weapon", typeof(VanillaSpear));
     }
