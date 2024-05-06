@@ -122,7 +122,7 @@
     }
   ],
   "shape": {
-    "base": "item/tool/sword-training"
+    "base": "sword-training"
   },
   "textures": {
   },
