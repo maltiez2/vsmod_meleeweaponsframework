@@ -57,6 +57,7 @@ public class DirectionalWeaponAttackStats
     public float Damage { get; set; } = 1.0f;
     public int Tier { get; set; } = 0;
     public string DamageType { get; set; } = "PiercingAttack";
+    public WeaponAnimationParameters[] AnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
 
 public class DirectionalWeaponParryStats
@@ -66,6 +67,38 @@ public class DirectionalWeaponParryStats
     public float EaseInTimeMs { get; set; } = 100;
     public float EaseOutTimeMs { get; set; } = 100;
     public string[] Directions { get; set; } = Array.Empty<string>();
+    public WeaponAnimationParameters[] EaseInAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
+    public WeaponAnimationParameters[] EaseOutAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
+}
+
+
+public class WeaponAnimationParameters
+{
+    public string Action { get; set; } = "EaseOut";
+    public float DurationMs { get; set; } = 1.0f;
+    public float Frame { get; set; } = 0.0f;
+    public float StartFrame { get; set; } = 0.0f;
+    public float TargetFrame { get; set; } = 0.0f;
+    public string EasingFunction { get; set; } = "Sin";
+
+    public RunParameters ToRunParameters()
+    {
+        AnimationPlayerAction action = Enum.Parse<AnimationPlayerAction>(Action);
+        ProgressModifierType easingFunction = Enum.Parse<ProgressModifierType>(EasingFunction);
+        TimeSpan duration = TimeSpan.FromMilliseconds(DurationMs);
+
+        return action switch
+        {
+            AnimationPlayerAction.Set => RunParameters.Set(Frame),
+            AnimationPlayerAction.EaseIn => RunParameters.EaseIn(duration, Frame, easingFunction),
+            AnimationPlayerAction.EaseOut => RunParameters.EaseOut(duration, easingFunction),
+            AnimationPlayerAction.Play => RunParameters.Play(duration, StartFrame, TargetFrame, easingFunction),
+            AnimationPlayerAction.Stop => RunParameters.Stop(),
+            AnimationPlayerAction.Rewind => RunParameters.Rewind(duration, StartFrame, TargetFrame, easingFunction),
+            AnimationPlayerAction.Clear => RunParameters.Clear(),
+            _ => throw new NotImplementedException(),
+        };
+    }
 }
 
 public enum GripType
@@ -541,12 +574,21 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         foreach ((string direction, DirectionalWeaponAttackStats stats) in attacks)
         {
-            RunParameters[] parameters = new RunParameters[]
+            RunParameters[] parameters;
+
+            if (stats.AnimationParameters.Length > 0)
             {
-                RunParameters.EaseIn(stats.WindUpMs / 1000.0f, stats.AnimationWindupFrame, ProgressModifierType.SinQuadratic),
-                RunParameters.Play(stats.DurationMs / 1000.0f, stats.AnimationWindupFrame, stats.AnimationStrikeFrame, ProgressModifierType.Linear),
-                RunParameters.EaseOut(stats.EaseOutMs / 1000.0f, ProgressModifierType.Sin)
-            };
+                parameters = stats.AnimationParameters.Select(element => element.ToRunParameters()).ToArray();
+            }
+            else
+            {
+                parameters = new RunParameters[]
+                {
+                    RunParameters.EaseIn(stats.WindUpMs / 1000.0f, stats.AnimationWindupFrame, ProgressModifierType.SinQuadratic),
+                    RunParameters.Play(stats.DurationMs / 1000.0f, stats.AnimationWindupFrame, stats.AnimationStrikeFrame, ProgressModifierType.Linear),
+                    RunParameters.EaseOut(stats.EaseOutMs / 1000.0f, ProgressModifierType.Sin)
+                };
+            }
 
             PlayerAnimationData animation = new(stats.Animation, animationSystem);
 
@@ -563,10 +605,19 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         foreach ((string direction, DirectionalWeaponParryStats stats) in parries)
         {
-            RunParameters[] parameters = new RunParameters[]
+            RunParameters[] parameters;
+
+            if (stats.EaseInAnimationParameters.Length > 0)
             {
-                RunParameters.EaseIn(stats.EaseInTimeMs / 1000.0f, stats.AnimationFrame, ProgressModifierType.SinQuadratic)
-            };
+                parameters = stats.EaseInAnimationParameters.Select(element => element.ToRunParameters()).ToArray();
+            }
+            else
+            {
+                parameters = new RunParameters[]
+                {
+                     RunParameters.EaseIn(stats.EaseInTimeMs / 1000.0f, stats.AnimationFrame, ProgressModifierType.SinQuadratic)
+                };
+            }
 
             PlayerAnimationData animation = new(stats.Animation, animationSystem);
 
@@ -583,10 +634,19 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         foreach ((string direction, DirectionalWeaponParryStats stats) in parries)
         {
-            RunParameters[] parameters = new RunParameters[]
+            RunParameters[] parameters;
+            
+            if (stats.EaseOutAnimationParameters.Length > 0)
             {
-                RunParameters.EaseOut(stats.EaseOutTimeMs / 1000.0f, ProgressModifierType.Sin)
-            };
+                parameters = stats.EaseOutAnimationParameters.Select(element => element.ToRunParameters()).ToArray();
+            }
+            else
+            {
+                parameters = new RunParameters[]
+                {
+                     RunParameters.EaseOut(stats.EaseOutTimeMs / 1000.0f, ProgressModifierType.Sin)
+                };
+            }
 
             PlayerAnimationData animation = new(stats.Animation, animationSystem);
 

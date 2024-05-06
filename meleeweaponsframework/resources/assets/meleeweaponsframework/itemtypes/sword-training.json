@@ -64,7 +64,7 @@
           "AttackAnimation": "falx",
           "AttackAnimationWindupFrame": 4,
           "AttackAnimationStrikeFrame": 23,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1],
+          "Collider": [0.2, 0, 0.5, 1.3, 0, 0.1],
           "AttackWindUpMs": 300,
           "AttackDurationMs": 1500,
           "AttackEaseOutMs": 500,
