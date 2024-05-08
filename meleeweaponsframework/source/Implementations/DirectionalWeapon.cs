@@ -131,6 +131,9 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
 
+        RegisterAttacks();
+        RegisterParries();
+
         if (api is not ICoreClientAPI clientAPI) return;
 
         Api = clientAPI;
@@ -139,9 +142,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
 
         ConstructAnimations();
-        RegisterAttacks();
-        RegisterParries();
-
+        
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
     }
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
