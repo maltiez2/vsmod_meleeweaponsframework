@@ -130,18 +130,16 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
-
-        RegisterAttacks();
-        RegisterParries();
-
-        if (api is not ICoreClientAPI clientAPI) return;
-
-        Api = clientAPI;
-
-        MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
-        BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+        
+        if (api is ICoreClientAPI clientApi)
+        {
+            MeleeSystem = clientApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+            BlockSystem = clientApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+        }
 
         ConstructAnimations();
+        RegisterAttacks();
+        RegisterParries();
         
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
     }
