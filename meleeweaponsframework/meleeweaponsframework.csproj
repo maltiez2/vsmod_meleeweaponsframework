@@ -58,7 +58,7 @@
 
   <!-- Startup settings are imported from an external file. -->
   <!-- Copy StartupSettingsTemplate.props to StartupSettings.props to get properties set for your machine. -->
-  <Import Project="$(SolutionDir)\StartupSettings.props"/>
+  <Import Project="$(ProjectDir)\StartupSettings.props"/>
 
   <!-- References to libraries that are being used in project -->
   <ItemGroup>
