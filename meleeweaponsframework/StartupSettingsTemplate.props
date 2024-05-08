@@ -1,0 +1,11 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Startup settings -->
+  <PropertyGroup>
+    <DataFolderName>VintagestoryDataDev</DataFolderName>
+    <AppDataDir>C:\Users\user\AppData\Roaming</AppDataDir>
+    <DataFolder>$(AppDataDir)\$(DataFolderName)</DataFolder>
+    <AditionalModsFolder>$(AppDataDir)\$(DataFolderName)\Mods</AditionalModsFolder>
+    <WorldName>test_$(ModId)</WorldName>
+    <ModDir>$(ProjectDir)\$(OutputDir)</ModDir>
+  </PropertyGroup>
+</Project>
