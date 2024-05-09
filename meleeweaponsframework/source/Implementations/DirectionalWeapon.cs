@@ -79,7 +79,7 @@ public class WeaponAnimationParameters
     public float Frame { get; set; } = 0.0f;
     public float StartFrame { get; set; } = 0.0f;
     public float TargetFrame { get; set; } = 0.0f;
-    public string EasingFunction { get; set; } = "Sin";
+    public string EasingFunction { get; set; } = "Linear";
 
     public RunParameters ToRunParameters()
     {
@@ -131,12 +131,12 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
 
-        if (api is not ICoreClientAPI clientAPI) return;
-
-        Api = clientAPI;
-
-        MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
-        BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+        if (api is ICoreClientAPI clientAPI)
+        {
+            Api = clientAPI;
+            MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+            BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+        }
 
         ConstructAnimations();
         RegisterAttacks();

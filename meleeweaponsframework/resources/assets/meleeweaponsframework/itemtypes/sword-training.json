@@ -11,28 +11,45 @@
       "CanChangeGrip": true,
       "AttacksOneHanded": {
         "Top": {
-          "AttackAnimation": "meleeweaponsframework-spear-hit",
-          "AttackAnimationWindupFrame": 4,
-          "AttackAnimationStrikeFrame": 23,
+          "Animation": "meleeweaponsframework-spear-hit",
+          "AnimationWindupFrame": 4,
+          "AnimationStrikeFrame": 23,
           "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
-          "AttackWindUpMs": 100,
-          "AttackDurationMs": 500,
-          "AttackEaseOutMs": 300,
-          "AttackDamage": 3,
-          "AttackTier": 2,
-          "AttackDamageType": "BluntAttack"
+          "WindUpMs": 100,
+          "DurationMs": 500,
+          "EaseOutMs": 300,
+          "Damage": 3,
+          "Tier": 2,
+          "DamageType": "BluntAttack"
         },
         "BottomLeft": {
           "AttackAnimation": "falx",
-          "AttackAnimationWindupFrame": 4,
-          "AttackAnimationStrikeFrame": 23,
           "Collider": [0.2, 0, 0.5, 1.3, 0, 0.1],
           "AttackWindUpMs": 100,
           "AttackDurationMs": 500,
           "AttackEaseOutMs": 300,
           "AttackDamage": 3,
           "AttackTier": 2,
-          "AttackDamageType": "BluntAttack"
+          "AttackDamageType": "BluntAttack",
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "DurationMs":  100,
+              "Frame": 0,
+              "EasingFunction": "SinQuadratic"
+            },
+            {
+              "Action": "Play",
+              "DurationMs": 500,
+              "StartFrame": 0,
+              "TargetFrame": 23
+            },
+            {
+              "Action": "EaseOut",
+              "DurationMs":  300,
+              "EasingFunction": "Sin"
+            }
+          ]
         },
         "BottomRight": {
           "AttackAnimation": "falx",

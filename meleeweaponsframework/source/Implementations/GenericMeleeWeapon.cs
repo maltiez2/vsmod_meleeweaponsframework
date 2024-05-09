@@ -2,9 +2,6 @@
 using AnimationManagerLib.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Server;
-using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 

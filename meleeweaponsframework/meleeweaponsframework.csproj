@@ -193,4 +193,10 @@
     <Delete Files="$(ReleasePathDev)" />
     <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="$(ReleasePathDev)" />
   </Target>
+  <ItemGroup>
+    <EditorConfigFiles Remove="D:\Projects\VintageStory\meleeweaponsframework\meleeweaponsframework\.editorconfig" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\Projects\VintageStory\meleeweaponsframework\meleeweaponsframework\.editorconfig" />
+  </ItemGroup>
 </Project>
