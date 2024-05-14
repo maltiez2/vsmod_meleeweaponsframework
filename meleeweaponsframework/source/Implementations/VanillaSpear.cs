@@ -104,7 +104,6 @@ public class VanillaSpear : GenericMeleeWeapon
         }
         else
         {
-            Console.WriteLine("Throwing");
             Behavior?.PlayAnimation(ThrowAnimation, mainHand, true, null, ThrowAnimationParameters);
             Api?.World.RegisterCallback(dt => ThrowSystemClient?.Throw(ThrowId, mainHand), (int)SpearParameters.ThrowAnimationDurationMs);
         }

@@ -281,3 +281,207 @@ public readonly struct LineSegmentCollider : ICollider
         return null;
     }
 }
+
+public readonly struct RectangularCollider
+{
+    public readonly Vector3 VertexA;
+    public readonly Vector3 VertexB;
+    public readonly Vector3 VertexC;
+    public readonly Vector3 VertexD;
+
+    public RectangularCollider(Vector4 vertexA, Vector4 vertexB, Vector4 vertexC, Vector4 vertexD)
+    {
+        VertexA = new(vertexA.X, vertexA.Y, vertexA.Z);
+        VertexB = new(vertexB.X, vertexB.Y, vertexB.Z);
+        VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
+        VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
+    }
+
+    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    {
+        float startProjection = Vector3.Dot(normal, start);
+        float directionProjection = Vector3.Dot(normal, start + direction);
+        float planeProjection = Vector3.Dot(normal, VertexA);
+
+        return (planeProjection - startProjection) / (directionProjection - startProjection);
+    }
+
+    public bool Collide(Vector3 segmentStart, Vector3 segmentDirection, out float parameter, out Vector3 intersection)
+    {
+        Vector3 normal = Vector3.Cross(VertexB - VertexA, VertexC - VertexA);
+
+        #region Check if segment is parallel to the plane defined by the face
+        float denominator = Vector3.Dot(normal, segmentDirection);
+        if (Math.Abs(denominator) < 0.0001f)
+        {
+            parameter = -1;
+            intersection = Vector3.Zero;
+            return false;
+        }
+        #endregion
+
+        #region Compute intersection point with the plane defined by the face and check if segment intersects the plane
+        parameter = IntersectPlaneWithLine(segmentStart, segmentDirection, normal);
+        if (parameter < 0 || parameter > 1)
+        {
+            intersection = Vector3.Zero;
+            return false;
+        }
+        #endregion
+
+        intersection = segmentStart + parameter * segmentDirection;
+
+        #region Check if the intersection point is within the face boundaries
+        Vector3 edge0 = VertexB - VertexA;
+        Vector3 vp0 = intersection - VertexA;
+        if (Vector3.Dot(normal, Vector3.Cross(edge0, vp0)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge1 = VertexC - VertexB;
+        Vector3 vp1 = intersection - VertexB;
+        if (Vector3.Dot(normal, Vector3.Cross(edge1, vp1)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge2 = VertexD - VertexC;
+        Vector3 vp2 = intersection - VertexC;
+        if (Vector3.Dot(normal, Vector3.Cross(edge2, vp2)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge3 = VertexA - VertexD;
+        Vector3 vp3 = intersection - VertexD;
+        if (Vector3.Dot(normal, Vector3.Cross(edge3, vp3)) < 0)
+        {
+            return false;
+        }
+        #endregion
+
+
+
+        return true;
+    }
+}
+
+public readonly struct OctagonalCollider
+{
+    public readonly Vector3 VertexA;
+    public readonly Vector3 VertexB;
+    public readonly Vector3 VertexC;
+    public readonly Vector3 VertexD;
+    public readonly Vector3 VertexE;
+    public readonly Vector3 VertexF;
+    public readonly Vector3 VertexG;
+    public readonly Vector3 VertexH;
+
+    public OctagonalCollider(Vector4 vertexA, Vector4 vertexB, Vector4 vertexC, Vector4 vertexD, Vector4 vertexE, Vector4 vertexF, Vector4 vertexG, Vector4 vertexH)
+    {
+        VertexA = new(vertexA.X, vertexA.Y, vertexA.Z);
+        VertexB = new(vertexB.X, vertexB.Y, vertexB.Z);
+        VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
+        VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
+        VertexE = new(vertexE.X, vertexE.Y, vertexE.Z);
+        VertexF = new(vertexF.X, vertexF.Y, vertexF.Z);
+        VertexG = new(vertexG.X, vertexG.Y, vertexG.Z);
+        VertexH = new(vertexH.X, vertexH.Y, vertexH.Z);
+    }
+
+    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    {
+        float startProjection = Vector3.Dot(normal, start);
+        float directionProjection = Vector3.Dot(normal, start + direction);
+        float planeProjection = Vector3.Dot(normal, VertexA);
+
+        return (planeProjection - startProjection) / (directionProjection - startProjection);
+    }
+
+    public bool Collide(Vector3 segmentStart, Vector3 segmentDirection, out float parameter, out Vector3 intersection)
+    {
+        Vector3 normal = Vector3.Cross(VertexB - VertexA, VertexC - VertexA);
+
+        #region Check if segment is parallel to the plane defined by the face
+        float denominator = Vector3.Dot(normal, segmentDirection);
+        if (Math.Abs(denominator) < 0.0001f)
+        {
+            parameter = -1;
+            intersection = Vector3.Zero;
+            return false;
+        }
+        #endregion
+
+        #region Compute intersection point with the plane defined by the face and check if segment intersects the plane
+        parameter = IntersectPlaneWithLine(segmentStart, segmentDirection, normal);
+        if (parameter < 0 || parameter > 1)
+        {
+            intersection = Vector3.Zero;
+            return false;
+        }
+        #endregion
+
+        intersection = segmentStart + parameter * segmentDirection;
+
+        #region Check if the intersection point is within the face boundaries
+        Vector3 edge0 = VertexB - VertexA;
+        Vector3 vp0 = intersection - VertexA;
+        if (Vector3.Dot(normal, Vector3.Cross(edge0, vp0)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge1 = VertexC - VertexB;
+        Vector3 vp1 = intersection - VertexB;
+        if (Vector3.Dot(normal, Vector3.Cross(edge1, vp1)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge2 = VertexD - VertexC;
+        Vector3 vp2 = intersection - VertexC;
+        if (Vector3.Dot(normal, Vector3.Cross(edge2, vp2)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge3 = VertexE - VertexD;
+        Vector3 vp3 = intersection - VertexD;
+        if (Vector3.Dot(normal, Vector3.Cross(edge3, vp3)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge4 = VertexF - VertexE;
+        Vector3 vp4 = intersection - VertexE;
+        if (Vector3.Dot(normal, Vector3.Cross(edge4, vp4)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge5 = VertexG - VertexF;
+        Vector3 vp5 = intersection - VertexF;
+        if (Vector3.Dot(normal, Vector3.Cross(edge5, vp5)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge6 = VertexH - VertexG;
+        Vector3 vp6 = intersection - VertexG;
+        if (Vector3.Dot(normal, Vector3.Cross(edge6, vp6)) < 0)
+        {
+            return false;
+        }
+
+        Vector3 edge7 = VertexA - VertexH;
+        Vector3 vp7 = intersection - VertexH;
+        if (Vector3.Dot(normal, Vector3.Cross(edge7, vp7)) < 0)
+        {
+            return false;
+        }
+        #endregion
+
+        return true;
+    }
+}

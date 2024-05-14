@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using AnimationManagerLib.Integration;
+using ImGuiNET;
 using ProtoBuf;
 using System.Numerics;
 using Vintagestory.API.Common;
@@ -27,6 +28,7 @@ public struct MeleeAttackDamagePacket
 {
     public MeleeAttackDamageId Id { get; set; }
     public float[] Position { get; set; }
+    public int Collider { get; set; }
     public long AttackerEntityId { get; set; }
     public long TargetEntityId { get; set; }
 }
@@ -51,12 +53,14 @@ public interface IDirectionalDamage
 public interface ILocationalDamage
 {
     public Vector3 Position { get; set; }
+    public int Collider { get; set; }
 }
 
-public class MeleeAttackDamageSource : DamageSource, IDirectionalDamage, ILocationalDamage
+public class MeleeAttackDirectionalDamageSource : DamageSource, IDirectionalDamage, ILocationalDamage
 {
     public AttackDirection Direction { get; set; }
     public Vector3 Position { get; set; }
+    public int Collider { get; set; }
 }
 
 public class MeleeAttackDamageType : IHasLineCollider
@@ -114,17 +118,17 @@ public class MeleeAttackDamageType : IHasLineCollider
         DurabilityDamage = stats.DurabilityDamage;
     }
 
-    public Vector3? TryAttack(IPlayer attacker, Entity target, AttackDirection direction)
+    public Vector3? TryAttack(IPlayer attacker, Entity target, AttackDirection direction, out int collider)
     {
-        Vector3? collisionPoint = Collide(target);
+        Vector3? collisionPoint = Collide(target, out collider);
 
         if (collisionPoint == null) return null;
 
-        bool received = Attack(attacker.Entity, target, direction, collisionPoint.Value);
+        bool received = Attack(attacker.Entity, target, direction, collisionPoint.Value, collider);
 
         return received ? collisionPoint : null;
     }
-    public bool Attack(Entity attacker, Entity target, AttackDirection direction, Vector3 position)
+    public bool Attack(Entity attacker, Entity target, AttackDirection direction, Vector3 position, int collider)
     {
         if (attacker.Api is ICoreServerAPI serverApi && attacker is EntityPlayer playerAttacker)
         {
@@ -143,7 +147,7 @@ public class MeleeAttackDamageType : IHasLineCollider
             targetId = playerTarget.GetName();
         }
 
-        bool damageReceived = target.ReceiveDamage(new MeleeAttackDamageSource()
+        bool damageReceived = target.ReceiveDamage(new MeleeAttackDirectionalDamageSource()
         {
             Source = attacker is EntityPlayer ? EnumDamageSource.Player : EnumDamageSource.Entity,
             SourceEntity = null,
@@ -151,7 +155,8 @@ public class MeleeAttackDamageType : IHasLineCollider
             Type = DamageType,
             DamageTier = Tier,
             Direction = direction,
-            Position = position
+            Position = position,
+            Collider = collider
         }, Damage);
 
         if (attacker.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(attacker.Api, this, $"Entity '{attackerId}' attacks entity '{targetId}' from direction '{direction}'. Target receives '{damageReceived}' damage.");
@@ -183,12 +188,19 @@ public class MeleeAttackDamageType : IHasLineCollider
 #endif
 
     private const float _knockbackFactor = 0.1f;
-    private Vector3? Collide(Entity target)
+    private Vector3? Collide(Entity target, out int collider)
     {
+        CollidersEntityBehavior? colliders = target.GetBehavior<CollidersEntityBehavior>();
+        if (colliders != null)
+        {
+            bool intersects = colliders.Collide(InWorldCollider.Position, InWorldCollider.Direction, out collider, out _, out Vector3 intersection);
+            return intersects ? intersection : null;
+        }
+
+        collider = -1;
+
         Cuboidf collisionBox = GetCollisionBox(target);
-
         if (!InWorldCollider.RoughIntersect(collisionBox)) return null;
-
         return InWorldCollider.IntersectCuboid(collisionBox);
     }
     private static Cuboidf GetCollisionBox(Entity entity)

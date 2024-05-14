@@ -119,8 +119,6 @@ public class HackingSystemServer : HackingSystem
 
     private void HandlePacket(IServerPlayer player, HackingAttackPacket packet)
     {
-        Console.WriteLine("Hack packet");
-        
         ItemSlot slot;
         if (packet.RightHand)
         {
@@ -136,8 +134,6 @@ public class HackingSystemServer : HackingSystem
         Entity entity = player.Entity.World.GetEntityById(packet.HackedEntity);
 
         if (!CanHack(entity, player.Entity, slot, _api)) return;
-
-        Console.WriteLine("Can hack");
 
         SpawnEntityInPlaceOf(entity, entity.Properties.Attributes["hackedEntity"].AsString(), player.Entity, _api);
     }
