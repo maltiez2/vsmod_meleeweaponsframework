@@ -17,8 +17,6 @@
 			"IdleAnimation": "idle1",
 			"ReadyAnimation": "idle1",
 			"AttackAnimation": "meleeweaponsframework-spear-hit",
-			"AttackAnimationWindupFrame": 6,
-			"AttackAnimationStrikeFrame": 12,
 			"Collider": [1.0, 0, 0.5, 1.8, 0, 0.5],
 			"AttackWindUpMs": 100,
 			"AttackDurationMs": 300,
@@ -66,7 +64,26 @@
 			"AimAnimationFrame": 9,
 			"ThrowAnimation": "throw",
 			"ThrowAnimationFrame": 5,
-			"ThrowAnimationDurationMs": 200
+			"ThrowAnimationDurationMs": 200,
+			"AttackAnimationParameters": [
+				{
+					"Action": "EaseIn",
+					"DurationMs": 300,
+					"Frame": 10,
+					"EasingFunction": "Quintic"
+				},
+				{
+					"Action": "EaseIn",
+					"DurationMs": 100,
+					"Frame": 10,
+					"EasingFunction": "Bounce"
+				},
+				{
+					"Action": "EaseOut",
+					"DurationMs": 300,
+					"EasingFunction": "Sin"
+				}
+			]
 		}
 	},
 	{ 
@@ -75,6 +92,22 @@
 		"file": "game:itemtypes/tool/spear", 
 		"op": "replace", 
 		"path": "/heldTpHitAnimation", 
+		"value": "meleeweaponsframework-empty"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "replace", 
+		"path": "/heldRightReadyAnimation", 
+		"value": "meleeweaponsframework-empty"
+	},
+	{ 
+		"enabled": true,
+		"side": "Server", 
+		"file": "game:itemtypes/tool/spear", 
+		"op": "replace", 
+		"path": "/heldTpIdleAnimation", 
 		"value": "meleeweaponsframework-empty"
 	},
 	{ 

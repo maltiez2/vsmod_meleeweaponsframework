@@ -169,7 +169,8 @@ public sealed class MeleeAttack
     private IEnumerable<(Block block, Vector3 point)> CheckTerrainCollision(float progress)
     {
         _terrainCollisionsBuffer.Clear();
-        foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X >= progress && item.HitWindow.Y <= progress))
+
+        foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X <= progress && item.HitWindow.Y >= progress))
         {
             (Block block, Vector3 position)? result = damageType.InWorldCollider.IntersectTerrain(_api);
 
@@ -177,7 +178,7 @@ public sealed class MeleeAttack
             {
                 _terrainCollisionsBuffer.Add(result.Value);
                 Vector3 direction = damageType.InWorldCollider.Direction / damageType.InWorldCollider.Direction.Length() * -1;
-                _damageTypesEffects[damageType.Id].OnTerrainCollision(result.Value.block, result.Value.position, direction, _api);
+                if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnTerrainCollision(result.Value.block, result.Value.position, direction, _api);
             }
         }
 
@@ -192,13 +193,14 @@ public sealed class MeleeAttack
         _entitiesCollisionsBuffer.Clear();
         foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X <= progress && item.HitWindow.Y >= progress))
         {
+            int collider = -1;
             foreach ((Entity entity, Vector3? point) in entities
                     .Where(entity => entity != player.Entity)
                     .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
-                    .Select(entity => (entity, damageType.TryAttack(player, entity, _direction))))
+                    .Select(entity => (entity, damageType.TryAttack(player, entity, _direction, out collider))))
             {
                 if (point == null) continue;
-                packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId });
+                packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId, Collider = collider });
                 if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnEntityCollision(entity, damageType.InWorldCollider.Position, damageType.InWorldCollider.Direction, _api);
                 _entitiesCollisionsBuffer.Add((entity, point.Value));
                 if (damageType.DurabilityDamage > 0)
@@ -217,10 +219,10 @@ public sealed class MeleeAttack
 
 public class SimpleCollisionEffects
 {
-    public AssetLocation EntityCollisionSounds { get; set; } = new();
-    public AssetLocation TerrainCollisionSounds { get; set; } = new();
-    public string TerrainCollisionParticles { get; set; } = "";
-    public string EntityCollisionParticles { get; set; } = "";
+    public AssetLocation? EntityCollisionSounds { get; set; } = null;
+    public AssetLocation? TerrainCollisionSounds { get; set; } = null;
+    public string? TerrainCollisionParticles { get; set; } = null;
+    public string? EntityCollisionParticles { get; set; } = null;
 }
 
 public sealed class CollisionEffects
@@ -236,8 +238,8 @@ public sealed class CollisionEffects
     }
     public CollisionEffects(ICoreClientAPI api, SimpleCollisionEffects simpleEffects)
     {
-        EntityCollisionSounds.Add("*", simpleEffects.EntityCollisionSounds);
-        TerrainCollisionSounds.Add("*", simpleEffects.TerrainCollisionSounds);
+        if (simpleEffects.EntityCollisionSounds != null) EntityCollisionSounds.Add("*", simpleEffects.EntityCollisionSounds);
+        if (simpleEffects.TerrainCollisionSounds != null) TerrainCollisionSounds.Add("*", simpleEffects.TerrainCollisionSounds);
         // @TODO add particle effects manager
     }
 

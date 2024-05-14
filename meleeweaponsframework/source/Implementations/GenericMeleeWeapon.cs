@@ -2,9 +2,6 @@
 using AnimationManagerLib.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Server;
-using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
@@ -20,6 +17,9 @@ public class GenericMeleeWeaponParameters : MeleeWeaponParameters
     public float AttackDamage { get; set; } = 1.0f;
     public int AttackTier { get; set; } = 0;
     public string AttackDamageType { get; set; } = "BluntAttack";
+    public string StrikeSound { get; set; } = "sounds/player/strike1";
+    public string TerrainHitSound { get; set; } = "sounds/thud";
+    public WeaponAnimationParameters[] AttackAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
 
 public class GenericMeleeWeapon : MeleeWeaponItem
@@ -47,6 +47,13 @@ public class GenericMeleeWeapon : MeleeWeaponItem
                     Collider = GenericParameters.Collider,
                     HitWindow = new float[] { GenericParameters.AttackWindUpMs / duration, (GenericParameters.AttackDurationMs + GenericParameters.AttackWindUpMs) / duration }
                 }
+            },
+            Effects = new SimpleCollisionEffects[]
+            {
+                new()
+                {
+                    TerrainCollisionSounds = new(GenericParameters.TerrainHitSound)
+                }
             }
         };
 
@@ -55,13 +62,22 @@ public class GenericMeleeWeapon : MeleeWeaponItem
         ServerMeleeSystem?.Register(0, Id, attackStats);
         MeleeSystem?.Register(Attack, attackStats);
 
-        AnimationParameters = new RunParameters[]
+        if (GenericParameters.AttackAnimationParameters.Length > 0)
         {
-            RunParameters.EaseIn(GenericParameters.AttackWindUpMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, ProgressModifierType.SinQuadratic),
-            RunParameters.Play(GenericParameters.AttackDurationMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, GenericParameters.AttackAnimationStrikeFrame, ProgressModifierType.Linear),
-            RunParameters.EaseOut(GenericParameters.AttackEaseOutMs / 1000.0f, ProgressModifierType.Sin)
-        };
+            AnimationParameters = GenericParameters.AttackAnimationParameters.Select(element => element.ToRunParameters()).ToArray();
+        }
+        else
+        {
+            AnimationParameters = new RunParameters[]
+            {
+                RunParameters.EaseIn(GenericParameters.AttackWindUpMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, ProgressModifierType.SinQuadratic),
+                RunParameters.Play(GenericParameters.AttackDurationMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, GenericParameters.AttackAnimationStrikeFrame, ProgressModifierType.Linear),
+                RunParameters.EaseOut(GenericParameters.AttackEaseOutMs / 1000.0f, ProgressModifierType.Sin)
+            };
+        }
 
+
+        StrikeSound = new(GenericParameters.StrikeSound);
         DebugCollider = new(GenericParameters.Collider);
     }
 
@@ -97,6 +113,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     protected GenericMeleeWeaponParameters GenericParameters { get; private set; } = new();
     protected AttackId Attack { get; private set; } = new(0, 0);
     protected RunParameters[] AnimationParameters { get; private set; } = Array.Empty<RunParameters>();
+    protected AssetLocation? StrikeSound { get; set; }
 
     [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
@@ -107,11 +124,22 @@ public class GenericMeleeWeapon : MeleeWeaponItem
         Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
         state = MeleeWeaponState.Active;
 
+        Api?.World.PlaySoundAt(StrikeSound, player);
+
         return true;
     }
 
     protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction, bool mainHand)
     {
+        Console.WriteLine(result.Result);
+        
+        if ((result.Result & AttackResultFlag.HitTerrain) != 0)
+        {
+            MeleeSystem?.Stop();
+            Behavior?.StopAnimation(mainHand);
+            Behavior?.SetState(MeleeWeaponState.Idle);
+        }
+        
         if (result.Result == AttackResultFlag.Finished)
         {
             MeleeSystem?.Stop();

@@ -157,7 +157,7 @@ public sealed class MeleeSystemServer : MeleeSystem
                 continue;
             }
 
-            damageType.Attack(player.Entity, targetEntity, (AttackDirection)packet.Direction, new(damagePacket.Position[0], damagePacket.Position[1], damagePacket.Position[2])); // @TODO: check distance and reach first
+            damageType.Attack(player.Entity, targetEntity, (AttackDirection)packet.Direction, new(damagePacket.Position[0], damagePacket.Position[1], damagePacket.Position[2]), damagePacket.Collider); // @TODO: check distance and reach first
 
             if (damageType.DurabilityDamage > 0)
             {
