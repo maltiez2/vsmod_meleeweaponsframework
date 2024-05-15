@@ -4,26 +4,10 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-public interface IHasLineCollider
-{
-    LineSegmentCollider RelativeCollider { get; }
-    LineSegmentCollider InWorldCollider { get; set; }
-}
-
-public interface ICollider
-{
-    void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = ColorUtil.WhiteArgb);
-    bool RoughIntersect(Cuboidf collisionBox);
-    Vector3? IntersectCuboids(IEnumerable<Cuboidf> collisionBoxes);
-    Vector3? IntersectCuboid(Cuboidf collisionBox);
-    (Block, Vector3)? IntersectTerrain(ICoreClientAPI api);
-}
-
-public readonly struct LineSegmentCollider : ICollider
+public readonly struct LineSegmentCollider : IWeaponCollider
 {
     public readonly Vector3 Position;
     public readonly Vector3 Direction;
@@ -56,13 +40,20 @@ public readonly struct LineSegmentCollider : ICollider
 
         api.Render.RenderLine(playerPos, tail.X, tail.Y, tail.Z, head.X, head.Y, head.Z, color);
     }
-    public LineSegmentCollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
-        Matrixf? modelMatrix = GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return null;
 
         return TransformSegment(this, modelMatrix, playerPos);
+    }
+    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    {
+        Vector3 tail = ColliderTools.TransformVector(Position, modelMatrix, playerPos);
+        Vector3 head = ColliderTools.TransformVector(Direction + Position, modelMatrix, playerPos);
+
+        return new LineSegmentCollider(tail, head - tail);
     }
 
     public bool RoughIntersect(Cuboidf collisionBox)
@@ -137,7 +128,7 @@ public readonly struct LineSegmentCollider : ICollider
     public static IEnumerable<LineSegmentCollider> Transform(IEnumerable<LineSegmentCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
-        Matrixf? modelMatrix = GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return Array.Empty<LineSegmentCollider>();
 
         return segments.Select(segment => TransformSegment(segment, modelMatrix, playerPos));
@@ -145,7 +136,7 @@ public readonly struct LineSegmentCollider : ICollider
     public static bool Transform(IEnumerable<IHasLineCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
-        Matrixf? modelMatrix = GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return false;
 
         foreach (IHasLineCollider damageType in segments)
@@ -156,55 +147,16 @@ public readonly struct LineSegmentCollider : ICollider
         return true;
     }
 
-    private static readonly Vec4f _inputBuffer = new(0, 0, 0, 1);
-    private static readonly Vec4f _outputBuffer = new(0, 0, 0, 1);
-    private static readonly Matrixf _matrixBuffer = new();
     private static readonly BlockPos _blockPosBuffer = new(0, 0, 0, 0);
     private static readonly Vec3d _blockPosVecBuffer = new();
     private const float _epsilon = 1e-6f;
 
     private static LineSegmentCollider TransformSegment(LineSegmentCollider value, Matrixf modelMatrix, EntityPos playerPos)
     {
-        Vector3 tail = TransformVector(value.Position, modelMatrix, playerPos);
-        Vector3 head = TransformVector(value.Direction + value.Position, modelMatrix, playerPos);
+        Vector3 tail = ColliderTools.TransformVector(value.Position, modelMatrix, playerPos);
+        Vector3 head = ColliderTools.TransformVector(value.Direction + value.Position, modelMatrix, playerPos);
 
         return new(tail, head - tail);
-    }
-    private static Vector3 TransformVector(Vector3 value, Matrixf modelMatrix, EntityPos playerPos)
-    {
-        _inputBuffer.X = value.X;
-        _inputBuffer.Y = value.Y;
-        _inputBuffer.Z = value.Z;
-
-        Mat4f.MulWithVec4(modelMatrix.Values, _inputBuffer, _outputBuffer);
-
-        _outputBuffer.X += (float)playerPos.X;
-        _outputBuffer.Y += (float)playerPos.Y;
-        _outputBuffer.Z += (float)playerPos.Z;
-
-        return new(_outputBuffer.X, _outputBuffer.Y, _outputBuffer.Z);
-    }
-    private static Matrixf? GetHeldItemModelMatrix(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
-    {
-        if (entity.Properties.Client.Renderer is not EntityShapeRenderer entityShapeRenderer) return null;
-
-        ItemStack? itemStack = itemSlot?.Itemstack;
-        if (itemStack == null) return null;
-
-        AttachmentPointAndPose? attachmentPointAndPose = entity.AnimManager?.Animator?.GetAttachmentPointPose(right ? "RightHand" : "LeftHand");
-        if (attachmentPointAndPose == null) return null;
-
-        AttachmentPoint attachPoint = attachmentPointAndPose.AttachPoint;
-        ItemRenderInfo itemStackRenderInfo = api.Render.GetItemStackRenderInfo(itemSlot, right ? EnumItemRenderTarget.HandTp : EnumItemRenderTarget.HandTpOff, 0f);
-        if (itemStackRenderInfo?.Transform == null) return null;
-
-        return _matrixBuffer.Set(entityShapeRenderer.ModelMat).Mul(attachmentPointAndPose.AnimModelMatrix).Translate(itemStackRenderInfo.Transform.Origin.X, itemStackRenderInfo.Transform.Origin.Y, itemStackRenderInfo.Transform.Origin.Z)
-            .Scale(itemStackRenderInfo.Transform.ScaleXYZ.X, itemStackRenderInfo.Transform.ScaleXYZ.Y, itemStackRenderInfo.Transform.ScaleXYZ.Z)
-            .Translate(attachPoint.PosX / 16.0 + itemStackRenderInfo.Transform.Translation.X, attachPoint.PosY / 16.0 + itemStackRenderInfo.Transform.Translation.Y, attachPoint.PosZ / 16.0 + itemStackRenderInfo.Transform.Translation.Z)
-            .RotateX((float)(attachPoint.RotationX + itemStackRenderInfo.Transform.Rotation.X) * (MathF.PI / 180f))
-            .RotateY((float)(attachPoint.RotationY + itemStackRenderInfo.Transform.Rotation.Y) * (MathF.PI / 180f))
-            .RotateZ((float)(attachPoint.RotationZ + itemStackRenderInfo.Transform.Rotation.Z) * (MathF.PI / 180f))
-            .Translate(0f - itemStackRenderInfo.Transform.Origin.X, 0f - itemStackRenderInfo.Transform.Origin.Y, 0f - itemStackRenderInfo.Transform.Origin.Z);
     }
     private static bool CheckAxisIntersection(float dirComponent, float startComponent, float minComponent, float maxComponent, ref float tMin, ref float tMax)
     {
@@ -282,7 +234,7 @@ public readonly struct LineSegmentCollider : ICollider
     }
 }
 
-public readonly struct RectangularCollider
+public readonly struct RectangularCollider : IParryCollider
 {
     public readonly Vector3 VertexA;
     public readonly Vector3 VertexB;
@@ -296,22 +248,35 @@ public readonly struct RectangularCollider
         VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
         VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
     }
-
-    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    public RectangularCollider(Vector3 vertexA, Vector3 vertexB, Vector3 vertexC, Vector3 vertexD)
     {
-        float startProjection = Vector3.Dot(normal, start);
-        float directionProjection = Vector3.Dot(normal, start + direction);
-        float planeProjection = Vector3.Dot(normal, VertexA);
-
-        return (planeProjection - startProjection) / (directionProjection - startProjection);
+        VertexA = new(vertexA.X, vertexA.Y, vertexA.Z);
+        VertexB = new(vertexB.X, vertexB.Y, vertexB.Z);
+        VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
+        VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
     }
 
-    public bool Collide(Vector3 segmentStart, Vector3 segmentDirection, out float parameter, out Vector3 intersection)
+    public void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = -1)
+    {
+        BlockPos playerPos = entityPlayer.Pos.AsBlockPos;
+        Vector3 playerPosVector = new(playerPos.X, playerPos.Y, playerPos.Z);
+
+        Vector3 pointA = VertexA - playerPosVector;
+        Vector3 pointB = VertexB - playerPosVector;
+        Vector3 pointC = VertexC - playerPosVector;
+        Vector3 pointD = VertexD - playerPosVector;
+
+        api.Render.RenderLine(playerPos, pointA.X, pointA.Y, pointA.Z, pointB.X, pointB.Y, pointB.Z, color);
+        api.Render.RenderLine(playerPos, pointA.X, pointA.Y, pointA.Z, pointC.X, pointC.Y, pointC.Z, color);
+        api.Render.RenderLine(playerPos, pointC.X, pointC.Y, pointC.Z, pointB.X, pointB.Y, pointB.Z, color);
+        api.Render.RenderLine(playerPos, pointC.X, pointC.Y, pointC.Z, pointD.X, pointD.Y, pointD.Z, color);
+    }
+    public bool IntersectSegment(LineSegmentCollider segment, out float parameter, out Vector3 intersection)
     {
         Vector3 normal = Vector3.Cross(VertexB - VertexA, VertexC - VertexA);
 
         #region Check if segment is parallel to the plane defined by the face
-        float denominator = Vector3.Dot(normal, segmentDirection);
+        float denominator = Vector3.Dot(normal, segment.Direction);
         if (Math.Abs(denominator) < 0.0001f)
         {
             parameter = -1;
@@ -321,7 +286,7 @@ public readonly struct RectangularCollider
         #endregion
 
         #region Compute intersection point with the plane defined by the face and check if segment intersects the plane
-        parameter = IntersectPlaneWithLine(segmentStart, segmentDirection, normal);
+        parameter = IntersectPlaneWithLine(segment.Position, segment.Direction, normal);
         if (parameter < 0 || parameter > 1)
         {
             intersection = Vector3.Zero;
@@ -329,7 +294,7 @@ public readonly struct RectangularCollider
         }
         #endregion
 
-        intersection = segmentStart + parameter * segmentDirection;
+        intersection = segment.Position + parameter * segment.Direction;
 
         #region Check if the intersection point is within the face boundaries
         Vector3 edge0 = VertexB - VertexA;
@@ -365,9 +330,58 @@ public readonly struct RectangularCollider
 
         return true;
     }
+    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    {
+        EntityPos playerPos = entity.Pos;
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        if (modelMatrix is null) return null;
+
+        return TransformCollider(this, modelMatrix, playerPos);
+    }
+    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    {
+        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, playerPos);
+        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, playerPos);
+        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, playerPos);
+        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, playerPos);
+
+        return new RectangularCollider(vertexA, vertexB, vertexC, vertexD);
+    }
+
+    public static bool Transform(IEnumerable<IHasRectangularCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    {
+        EntityPos playerPos = entity.Pos;
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        if (modelMatrix is null) return false;
+
+        foreach (IHasRectangularCollider damageType in segments)
+        {
+            damageType.InWorldCollider = TransformCollider(damageType.RelativeCollider, modelMatrix, playerPos);
+        }
+
+        return true;
+    }
+
+    private static RectangularCollider TransformCollider(RectangularCollider value, Matrixf modelMatrix, EntityPos playerPos)
+    {
+        Vector3 vertexA = ColliderTools.TransformVector(value.VertexA, modelMatrix, playerPos);
+        Vector3 vertexB = ColliderTools.TransformVector(value.VertexB, modelMatrix, playerPos);
+        Vector3 vertexC = ColliderTools.TransformVector(value.VertexC, modelMatrix, playerPos);
+        Vector3 vertexD = ColliderTools.TransformVector(value.VertexD, modelMatrix, playerPos);
+
+        return new(vertexA, vertexB, vertexC, vertexD);
+    }
+    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    {
+        float startProjection = Vector3.Dot(normal, start);
+        float directionProjection = Vector3.Dot(normal, start + direction);
+        float planeProjection = Vector3.Dot(normal, VertexA);
+
+        return (planeProjection - startProjection) / (directionProjection - startProjection);
+    }
 }
 
-public readonly struct OctagonalCollider
+public readonly struct OctagonalCollider : IParryCollider
 {
     public readonly Vector3 VertexA;
     public readonly Vector3 VertexB;
@@ -389,22 +403,47 @@ public readonly struct OctagonalCollider
         VertexG = new(vertexG.X, vertexG.Y, vertexG.Z);
         VertexH = new(vertexH.X, vertexH.Y, vertexH.Z);
     }
-
-    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    public OctagonalCollider(Vector3 vertexA, Vector3 vertexB, Vector3 vertexC, Vector3 vertexD, Vector3 vertexE, Vector3 vertexF, Vector3 vertexG, Vector3 vertexH)
     {
-        float startProjection = Vector3.Dot(normal, start);
-        float directionProjection = Vector3.Dot(normal, start + direction);
-        float planeProjection = Vector3.Dot(normal, VertexA);
-
-        return (planeProjection - startProjection) / (directionProjection - startProjection);
+        VertexA = new(vertexA.X, vertexA.Y, vertexA.Z);
+        VertexB = new(vertexB.X, vertexB.Y, vertexB.Z);
+        VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
+        VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
+        VertexE = new(vertexE.X, vertexE.Y, vertexE.Z);
+        VertexF = new(vertexF.X, vertexF.Y, vertexF.Z);
+        VertexG = new(vertexG.X, vertexG.Y, vertexG.Z);
+        VertexH = new(vertexH.X, vertexH.Y, vertexH.Z);
     }
 
-    public bool Collide(Vector3 segmentStart, Vector3 segmentDirection, out float parameter, out Vector3 intersection)
+    public void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = -1)
+    {
+        BlockPos playerPos = entityPlayer.Pos.AsBlockPos;
+        Vector3 playerPosVector = new(playerPos.X, playerPos.Y, playerPos.Z);
+
+        Vector3 pointA = VertexA - playerPosVector;
+        Vector3 pointB = VertexB - playerPosVector;
+        Vector3 pointC = VertexC - playerPosVector;
+        Vector3 pointD = VertexD - playerPosVector;
+        Vector3 pointE = VertexE - playerPosVector;
+        Vector3 pointF = VertexF - playerPosVector;
+        Vector3 pointG = VertexG - playerPosVector;
+        Vector3 pointH = VertexH - playerPosVector;
+
+        api.Render.RenderLine(playerPos, pointA.X, pointA.Y, pointA.Z, pointB.X, pointB.Y, pointB.Z, color);
+        api.Render.RenderLine(playerPos, pointB.X, pointB.Y, pointA.Z, pointC.X, pointC.Y, pointC.Z, color);
+        api.Render.RenderLine(playerPos, pointC.X, pointC.Y, pointA.Z, pointD.X, pointD.Y, pointD.Z, color);
+        api.Render.RenderLine(playerPos, pointD.X, pointD.Y, pointA.Z, pointE.X, pointE.Y, pointE.Z, color);
+        api.Render.RenderLine(playerPos, pointE.X, pointE.Y, pointA.Z, pointF.X, pointF.Y, pointF.Z, color);
+        api.Render.RenderLine(playerPos, pointF.X, pointF.Y, pointA.Z, pointG.X, pointG.Y, pointG.Z, color);
+        api.Render.RenderLine(playerPos, pointG.X, pointG.Y, pointA.Z, pointH.X, pointH.Y, pointH.Z, color);
+        api.Render.RenderLine(playerPos, pointH.X, pointH.Y, pointA.Z, pointA.X, pointA.Y, pointA.Z, color);
+    }
+    public bool IntersectSegment(LineSegmentCollider segment, out float parameter, out Vector3 intersection)
     {
         Vector3 normal = Vector3.Cross(VertexB - VertexA, VertexC - VertexA);
 
         #region Check if segment is parallel to the plane defined by the face
-        float denominator = Vector3.Dot(normal, segmentDirection);
+        float denominator = Vector3.Dot(normal, segment.Direction);
         if (Math.Abs(denominator) < 0.0001f)
         {
             parameter = -1;
@@ -414,7 +453,7 @@ public readonly struct OctagonalCollider
         #endregion
 
         #region Compute intersection point with the plane defined by the face and check if segment intersects the plane
-        parameter = IntersectPlaneWithLine(segmentStart, segmentDirection, normal);
+        parameter = IntersectPlaneWithLine(segment.Position, segment.Direction, normal);
         if (parameter < 0 || parameter > 1)
         {
             intersection = Vector3.Zero;
@@ -422,7 +461,7 @@ public readonly struct OctagonalCollider
         }
         #endregion
 
-        intersection = segmentStart + parameter * segmentDirection;
+        intersection = segment.Position + parameter * segment.Direction;
 
         #region Check if the intersection point is within the face boundaries
         Vector3 edge0 = VertexB - VertexA;
@@ -483,5 +522,62 @@ public readonly struct OctagonalCollider
         #endregion
 
         return true;
+    }
+    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    {
+        EntityPos playerPos = entity.Pos;
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        if (modelMatrix is null) return null;
+
+        return TransformCollider(this, modelMatrix, playerPos);
+    }
+    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    {
+        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, playerPos);
+        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, playerPos);
+        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, playerPos);
+        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, playerPos);
+        Vector3 vertexE = ColliderTools.TransformVector(VertexE, modelMatrix, playerPos);
+        Vector3 vertexF = ColliderTools.TransformVector(VertexF, modelMatrix, playerPos);
+        Vector3 vertexG = ColliderTools.TransformVector(VertexG, modelMatrix, playerPos);
+        Vector3 vertexH = ColliderTools.TransformVector(VertexH, modelMatrix, playerPos);
+
+        return new OctagonalCollider(vertexA, vertexB, vertexC, vertexD, vertexE, vertexF, vertexG, vertexH);
+    }
+
+    public static bool Transform(IEnumerable<IHasOctagonalCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    {
+        EntityPos playerPos = entity.Pos;
+        Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
+        if (modelMatrix is null) return false;
+
+        foreach (IHasOctagonalCollider damageType in segments)
+        {
+            damageType.InWorldCollider = TransformCollider(damageType.RelativeCollider, modelMatrix, playerPos);
+        }
+
+        return true;
+    }
+
+    private static OctagonalCollider TransformCollider(OctagonalCollider value, Matrixf modelMatrix, EntityPos playerPos)
+    {
+        Vector3 vertexA = ColliderTools.TransformVector(value.VertexA, modelMatrix, playerPos);
+        Vector3 vertexB = ColliderTools.TransformVector(value.VertexB, modelMatrix, playerPos);
+        Vector3 vertexC = ColliderTools.TransformVector(value.VertexC, modelMatrix, playerPos);
+        Vector3 vertexD = ColliderTools.TransformVector(value.VertexD, modelMatrix, playerPos);
+        Vector3 vertexE = ColliderTools.TransformVector(value.VertexE, modelMatrix, playerPos);
+        Vector3 vertexF = ColliderTools.TransformVector(value.VertexF, modelMatrix, playerPos);
+        Vector3 vertexG = ColliderTools.TransformVector(value.VertexG, modelMatrix, playerPos);
+        Vector3 vertexH = ColliderTools.TransformVector(value.VertexH, modelMatrix, playerPos);
+
+        return new(vertexA, vertexB, vertexC, vertexD, vertexE, vertexF, vertexG, vertexH);
+    }
+    private float IntersectPlaneWithLine(Vector3 start, Vector3 direction, Vector3 normal)
+    {
+        float startProjection = Vector3.Dot(normal, start);
+        float directionProjection = Vector3.Dot(normal, start + direction);
+        float planeProjection = Vector3.Dot(normal, VertexA);
+
+        return (planeProjection - startProjection) / (directionProjection - startProjection);
     }
 }

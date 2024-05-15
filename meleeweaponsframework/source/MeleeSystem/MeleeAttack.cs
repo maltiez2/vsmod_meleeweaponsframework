@@ -38,7 +38,6 @@ public class MeleeAttackStats
     public float Duration { get; set; } = 0;
     public float MaxReach { get; set; } = 4.5f;
     public MeleeAttackDamageTypeStats[] DamageTypes { get; set; } = Array.Empty<MeleeAttackDamageTypeStats>();
-    public SimpleCollisionEffects[] Effects { get; set; } = Array.Empty<SimpleCollisionEffects>();
 }
 
 public sealed class MeleeAttack
@@ -53,7 +52,7 @@ public sealed class MeleeAttack
     public bool StopOnEntityHit { get; set; } = false;
     public bool CollideWithTerrain { get; set; } = true;
 
-    public MeleeAttack(int id, int itemId, ICoreClientAPI api, TimeSpan duration, IEnumerable<MeleeAttackDamageType> damageTypes, float maxReach, Dictionary<MeleeAttackDamageId, CollisionEffects> effects)
+    public MeleeAttack(int id, int itemId, ICoreClientAPI api, TimeSpan duration, IEnumerable<MeleeAttackDamageType> damageTypes, float maxReach)
     {
         Id = id;
         ItemId = itemId;
@@ -61,17 +60,6 @@ public sealed class MeleeAttack
         Duration = duration;
         DamageTypes = damageTypes;
         MaxReach = maxReach;
-        foreach (MeleeAttackDamageType damageType in damageTypes)
-        {
-            if (effects.TryGetValue(damageType.Id, out CollisionEffects? value))
-            {
-                _damageTypesEffects[damageType.Id] = value;
-            }
-            else
-            {
-                _damageTypesEffects[damageType.Id] = new();
-            }
-        }
     }
 
     public MeleeAttack(ICoreClientAPI api, int id, int itemId, MeleeAttackStats stats)
@@ -84,11 +72,6 @@ public sealed class MeleeAttack
         MaxReach = stats.MaxReach;
 
         DamageTypes = stats.DamageTypes.Select((stats, index) => new MeleeAttackDamageType(new(itemId, id, index), stats)).ToImmutableArray();
-
-        for (int effectIndex = 0; effectIndex < stats.Effects.Length; effectIndex++)
-        {
-            _damageTypesEffects[new MeleeAttackDamageId(itemId, id, effectIndex)] = new CollisionEffects(api, stats.Effects[effectIndex]);
-        }
     }
 
     public void Start(IPlayer player, AttackDirection direction)
@@ -163,7 +146,6 @@ public sealed class MeleeAttack
     private readonly List<MeleeAttackDamagePacket> _damagePackets = new();
     private readonly HashSet<(Block block, Vector3 point)> _terrainCollisionsBuffer = new();
     private readonly HashSet<(Entity entity, Vector3 point)> _entitiesCollisionsBuffer = new();
-    private readonly Dictionary<MeleeAttackDamageId, CollisionEffects> _damageTypesEffects = new();
     private AttackDirection _direction = AttackDirection.Top;
 
     private IEnumerable<(Block block, Vector3 point)> CheckTerrainCollision(float progress)
@@ -178,7 +160,6 @@ public sealed class MeleeAttack
             {
                 _terrainCollisionsBuffer.Add(result.Value);
                 Vector3 direction = damageType.InWorldCollider.Direction / damageType.InWorldCollider.Direction.Length() * -1;
-                if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnTerrainCollision(result.Value.block, result.Value.position, direction, _api);
             }
         }
 
@@ -201,7 +182,6 @@ public sealed class MeleeAttack
             {
                 if (point == null) continue;
                 packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId, Collider = collider });
-                if (_damageTypesEffects.ContainsKey(damageType.Id)) _damageTypesEffects[damageType.Id].OnEntityCollision(entity, damageType.InWorldCollider.Position, damageType.InWorldCollider.Direction, _api);
                 _entitiesCollisionsBuffer.Add((entity, point.Value));
                 if (damageType.DurabilityDamage > 0)
                 {
@@ -214,71 +194,5 @@ public sealed class MeleeAttack
         IEnumerable<(Entity entity, Vector3 point)> result = _entitiesCollisionsBuffer.ToImmutableHashSet();
         _entitiesCollisionsBuffer.Clear();
         return result;
-    }
-}
-
-public class SimpleCollisionEffects
-{
-    public AssetLocation? EntityCollisionSounds { get; set; } = null;
-    public AssetLocation? TerrainCollisionSounds { get; set; } = null;
-    public string? TerrainCollisionParticles { get; set; } = null;
-    public string? EntityCollisionParticles { get; set; } = null;
-}
-
-public sealed class CollisionEffects
-{
-    public Dictionary<string, AssetLocation> EntityCollisionSounds { get; set; } = new();
-    public Dictionary<string, AssetLocation> TerrainCollisionSounds { get; set; } = new();
-    public Dictionary<string, (AdvancedParticleProperties effect, float directionFactor)> TerrainCollisionParticles { get; set; } = new();
-    public Dictionary<string, (AdvancedParticleProperties effect, float directionFactor)> EntityCollisionParticles { get; set; } = new();
-
-    public CollisionEffects()
-    {
-
-    }
-    public CollisionEffects(ICoreClientAPI api, SimpleCollisionEffects simpleEffects)
-    {
-        if (simpleEffects.EntityCollisionSounds != null) EntityCollisionSounds.Add("*", simpleEffects.EntityCollisionSounds);
-        if (simpleEffects.TerrainCollisionSounds != null) TerrainCollisionSounds.Add("*", simpleEffects.TerrainCollisionSounds);
-        // @TODO add particle effects manager
-    }
-
-    public void OnTerrainCollision(Block block, Vector3 position, Vector3 direction, ICoreAPI api)
-    {
-        foreach (AssetLocation sound in TerrainCollisionSounds.Where(entry => WildcardUtil.Match(entry.Key, block.Code.ToString())).Select(entry => entry.Value))
-        {
-            api.World.PlaySoundAt(sound, position.X, position.Y, position.Z, randomizePitch: true);
-            break;
-        }
-
-        foreach ((AdvancedParticleProperties effect, float directionFactor) in TerrainCollisionParticles.Where(entry => WildcardUtil.Match(entry.Key, block.Code.ToString())).Select(entry => entry.Value))
-        {
-            effect.basePos.X = position.X;
-            effect.basePos.Y = position.Y;
-            effect.basePos.Z = position.Z;
-            effect.baseVelocity.X = direction.X * directionFactor;
-            effect.baseVelocity.Y = direction.Y * directionFactor;
-            effect.baseVelocity.Z = direction.Z * directionFactor;
-            api.World.SpawnParticles(effect);
-        }
-    }
-    public void OnEntityCollision(Entity entity, Vector3 position, Vector3 direction, ICoreAPI api)
-    {
-        foreach (AssetLocation sound in EntityCollisionSounds.Where(entry => WildcardUtil.Match(entry.Key, entity.Code.ToString())).Select(entry => entry.Value))
-        {
-            api.World.PlaySoundAt(sound, entity, randomizePitch: true);
-            break;
-        }
-
-        foreach ((AdvancedParticleProperties effect, float directionFactor) in EntityCollisionParticles.Where(entry => WildcardUtil.Match(entry.Key, entity.Code.ToString())).Select(entry => entry.Value))
-        {
-            effect.basePos.X = position.X;
-            effect.basePos.Y = position.Y;
-            effect.basePos.Z = position.Z;
-            effect.baseVelocity.X = direction.X * directionFactor;
-            effect.baseVelocity.Y = direction.Y * directionFactor;
-            effect.baseVelocity.Z = direction.Z * directionFactor;
-            api.World.SpawnParticles(effect);
-        }
     }
 }

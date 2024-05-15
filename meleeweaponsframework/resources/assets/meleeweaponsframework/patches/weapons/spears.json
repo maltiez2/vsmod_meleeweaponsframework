@@ -18,8 +18,8 @@
 			"ReadyAnimation": "idle1",
 			"AttackAnimation": "meleeweaponsframework-spear-hit",
 			"Collider": [1.0, 0, 0.5, 1.8, 0, 0.5],
-			"AttackWindUpMs": 100,
-			"AttackDurationMs": 300,
+			"AttackWindUpMs": 150,
+			"AttackDurationMs": 250,
 			"AttackEaseOutMs": 300,
 			"AttackDamageByType": {
 				"spear-generic-chert": 1.75,
@@ -76,12 +76,12 @@
 					"Action": "EaseIn",
 					"DurationMs": 100,
 					"Frame": 10,
-					"EasingFunction": "Bounce"
+					"EasingFunction": "Linear"
 				},
 				{
 					"Action": "EaseOut",
-					"DurationMs": 300,
-					"EasingFunction": "Sin"
+					"DurationMs": 500,
+					"EasingFunction": "Bounce"
 				}
 			]
 		}

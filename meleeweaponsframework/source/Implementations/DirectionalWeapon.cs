@@ -110,10 +110,10 @@ public enum GripType
 public class DirectionalWeapon : Item, IMeleeWeaponItem
 {
     public int WeaponItemId => ItemId;
-    public virtual PlayerAnimationData IdleAnimation => Grip == GripType.OneHanded ? IdleOneHandedAnimation : IdleTwoHandedAnimation;
-    public virtual PlayerAnimationData ReadyAnimation => Grip == GripType.OneHanded ? ReadyOneHandedAnimation : ReadyTwoHandedAnimation;
-    public virtual PlayerAnimationData IdleAnimationOffhand => IdleOffhandAnimation;
-    public virtual PlayerAnimationData ReadyAnimationOffhand => ReadyOffhandAnimation;
+    public virtual IPlayerAnimationData IdleAnimation => Grip == GripType.OneHanded ? IdleOneHandedAnimation : IdleTwoHandedAnimation;
+    public virtual IPlayerAnimationData ReadyAnimation => Grip == GripType.OneHanded ? ReadyOneHandedAnimation : ReadyTwoHandedAnimation;
+    public virtual IPlayerAnimationData IdleAnimationOffhand => IdleOffhandAnimation;
+    public virtual IPlayerAnimationData ReadyAnimationOffhand => ReadyOffhandAnimation;
     public virtual DirectionsConfiguration DirectionsType => Grip == GripType.OneHanded ? DirectionsConfigurationOneHanded : DirectionsConfigurationTwoHanded;
     public virtual bool RenderDirectionCursor { get; protected set; } = true;
 
