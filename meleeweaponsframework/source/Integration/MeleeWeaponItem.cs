@@ -28,10 +28,10 @@ public class MeleeWeaponParameters
 public interface IMeleeWeaponItem
 {
     public int WeaponItemId { get; }
-    PlayerAnimationData IdleAnimation { get; }
-    PlayerAnimationData ReadyAnimation { get; }
-    PlayerAnimationData IdleAnimationOffhand { get; }
-    PlayerAnimationData ReadyAnimationOffhand { get; }
+    IPlayerAnimationData IdleAnimation { get; }
+    IPlayerAnimationData ReadyAnimation { get; }
+    IPlayerAnimationData IdleAnimationOffhand { get; }
+    IPlayerAnimationData ReadyAnimationOffhand { get; }
     DirectionsConfiguration DirectionsType { get; }
     bool RenderDirectionCursor { get; }
 
@@ -43,10 +43,10 @@ public interface IMeleeWeaponItem
 public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
 {
     public int WeaponItemId => ItemId;
-    public virtual PlayerAnimationData IdleAnimation { get; protected set; }
-    public virtual PlayerAnimationData ReadyAnimation { get; protected set; }
-    public virtual PlayerAnimationData IdleAnimationOffhand { get; protected set; }
-    public virtual PlayerAnimationData ReadyAnimationOffhand { get; protected set; }
+    public virtual IPlayerAnimationData IdleAnimation { get; protected set; }
+    public virtual IPlayerAnimationData ReadyAnimation { get; protected set; }
+    public virtual IPlayerAnimationData IdleAnimationOffhand { get; protected set; }
+    public virtual IPlayerAnimationData ReadyAnimationOffhand { get; protected set; }
     public virtual DirectionsConfiguration DirectionsType { get; protected set; } = DirectionsConfiguration.None;
     public virtual bool RenderDirectionCursor { get; protected set; } = false;
 
@@ -68,10 +68,10 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
 
         Parameters = Attributes[MeleeWeaponStatsAttribute].AsObject<MeleeWeaponParameters>();
 
-        IdleAnimation = new(Parameters.IdleAnimation, animationSystem);
-        ReadyAnimation = new(Parameters.ReadyAnimation, animationSystem);
-        IdleAnimationOffhand = new(Parameters.IdleAnimationOffhand, animationSystem);
-        ReadyAnimationOffhand = new(Parameters.ReadyAnimationOffhand, animationSystem);
+        IdleAnimation = new PlayerSimpleAnimationData(Parameters.IdleAnimation, animationSystem);
+        ReadyAnimation = new PlayerSimpleAnimationData(Parameters.ReadyAnimation, animationSystem);
+        IdleAnimationOffhand = new PlayerSimpleAnimationData(Parameters.IdleAnimationOffhand, animationSystem);
+        ReadyAnimationOffhand = new PlayerSimpleAnimationData(Parameters.ReadyAnimationOffhand, animationSystem);
         DirectionsType = Enum.Parse<DirectionsConfiguration>(Parameters.DirectionsConfiguration);
     }
 
@@ -99,15 +99,17 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
     protected MeleeBlockSystemServer? ServerBlockSystem { get; private set; }
     protected ICoreClientAPI? Api { get; private set; }
     protected MeleeWeaponParameters Parameters { get; private set; } = new();
+
+    protected bool AltPressed() => (Api?.Input.KeyboardKeyState[(int)GlKeys.AltLeft] ?? false) || (Api?.Input.KeyboardKeyState[(int)GlKeys.AltRight] ?? false);
 }
 
 public abstract class MeleeShieldItem : ItemShield, IMeleeWeaponItem
 {
     public int WeaponItemId => ItemId;
-    public virtual PlayerAnimationData IdleAnimation { get; protected set; }
-    public virtual PlayerAnimationData ReadyAnimation { get; protected set; }
-    public virtual PlayerAnimationData IdleAnimationOffhand { get; protected set; }
-    public virtual PlayerAnimationData ReadyAnimationOffhand { get; protected set; }
+    public virtual IPlayerAnimationData IdleAnimation { get; protected set; }
+    public virtual IPlayerAnimationData ReadyAnimation { get; protected set; }
+    public virtual IPlayerAnimationData IdleAnimationOffhand { get; protected set; }
+    public virtual IPlayerAnimationData ReadyAnimationOffhand { get; protected set; }
     public virtual DirectionsConfiguration DirectionsType { get; protected set; } = DirectionsConfiguration.None;
     public virtual bool RenderDirectionCursor { get; protected set; } = false;
 
@@ -129,10 +131,10 @@ public abstract class MeleeShieldItem : ItemShield, IMeleeWeaponItem
 
         Parameters = Attributes[MeleeWeaponStatsAttribute].AsObject<MeleeWeaponParameters>();
 
-        IdleAnimation = new(Parameters.IdleAnimation, animationSystem);
-        ReadyAnimation = new(Parameters.ReadyAnimation, animationSystem);
-        IdleAnimationOffhand = new(Parameters.IdleAnimationOffhand, animationSystem);
-        ReadyAnimationOffhand = new(Parameters.ReadyAnimationOffhand, animationSystem);
+        IdleAnimation = new PlayerAnimationData(Parameters.IdleAnimation, animationSystem);
+        ReadyAnimation = new PlayerAnimationData(Parameters.ReadyAnimation, animationSystem);
+        IdleAnimationOffhand = new PlayerAnimationData(Parameters.IdleAnimationOffhand, animationSystem);
+        ReadyAnimationOffhand = new PlayerAnimationData(Parameters.ReadyAnimationOffhand, animationSystem);
         DirectionsType = Enum.Parse<DirectionsConfiguration>(Parameters.DirectionsConfiguration);
     }
     public override void OnHeldIdle(ItemSlot slot, EntityAgent byEntity)
@@ -165,4 +167,6 @@ public abstract class MeleeShieldItem : ItemShield, IMeleeWeaponItem
     protected MeleeBlockSystemServer? BlockSystemServer { get; private set; }
     protected ICoreClientAPI? Api { get; private set; }
     protected MeleeWeaponParameters Parameters { get; private set; } = new();
+
+    protected bool AltPressed() => (Api?.Input.KeyboardKeyState[(int)GlKeys.AltLeft] ?? false) || (Api?.Input.KeyboardKeyState[(int)GlKeys.AltRight] ?? false);
 }

@@ -6,12 +6,14 @@
     "vanilla-shields-patch": "Vanilla shields",
     "vanilla-spears-rednering": "Vanilla spears rendering offset",
     "vanilla-swords-rednering": "Vanilla swords rendering offset",
+    "hit-particles": "Hit particles",
 
     "vanilla-spears-patch-desc": "Adds new collision based hit detrection system to vanilla spears",
     "vanilla-swords-patch-desc": "Adds new collision based hit detrection system to vanilla swords",
     "vanilla-shields-patch-desc": "Changes how block works for vanilla shields. Now they dont provide passive protection, instead you have to press RMB to block, and if you block right before enemy attack it will block all damage.",
     "vanilla-spears-rednering-desc": "Changes rendering for spears so they will clip into enemies and terrain, it makes it easier to jusdje distance",
     "vanilla-swords-rednering-desc": "Changes rendering for swords so they will clip into enemies and terrain, it makes it easier to jusdje distance",
+    "hit-particles-desc": "Red and orange particle on terrain and entity hit",
 
     "interaction-parry": "Parry with weapon",
     "interaction-attack": "Attack with weapon",

@@ -19,6 +19,7 @@ public sealed class DirectionCursorRenderer : IRenderer
     public float Alpha { get; set; } = 1.0f;
 
     public const int NumDirections = 8;
+    public const float ScaleMultiplier = 0.5f;
 
     public double RenderOrder => 0.98;
     public int RenderRange => 9999;
@@ -45,7 +46,7 @@ public sealed class DirectionCursorRenderer : IRenderer
 
         LoadedTexture texture = _directionCursorTextures[_currentDirection];
 
-        float reticleScale = CursorScale * RuntimeEnv.GUIScale;
+        float reticleScale = CursorScale * RuntimeEnv.GUIScale * ScaleMultiplier;
 
         _clientApi.Render.Render2DTexture(texture.TextureId,
             (_clientApi.Render.FrameWidth / 2) - (texture.Width * reticleScale / 2),

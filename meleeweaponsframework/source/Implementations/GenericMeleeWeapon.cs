@@ -1,5 +1,6 @@
 ﻿using AnimationManagerLib;
 using AnimationManagerLib.API;
+using System.Numerics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
@@ -19,6 +20,8 @@ public class GenericMeleeWeaponParameters : MeleeWeaponParameters
     public string AttackDamageType { get; set; } = "BluntAttack";
     public string StrikeSound { get; set; } = "sounds/player/strike1";
     public string TerrainHitSound { get; set; } = "sounds/thud";
+    public string EntityHitParticles { get; set; } = "";
+    public string TerrainHitParticles { get; set; } = "";
     public WeaponAnimationParameters[] AttackAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
 
@@ -30,6 +33,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
 
         GenericParameters = Attributes[MeleeWeaponStatsAttribute].AsObject<GenericMeleeWeaponParameters>();
         AttackAnimation = new(GenericParameters.AttackAnimation, api.ModLoader.GetModSystem<AnimationManagerLibSystem>());
+        MeleeWeaponsFrameworkModSystem system = api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>();
 
         float duration = GenericParameters.AttackDurationMs + GenericParameters.AttackWindUpMs + GenericParameters.AttackEaseOutMs;
 
@@ -48,13 +52,6 @@ public class GenericMeleeWeapon : MeleeWeaponItem
                     HitWindow = new float[] { GenericParameters.AttackWindUpMs / duration, (GenericParameters.AttackDurationMs + GenericParameters.AttackWindUpMs) / duration }
                 }
             },
-            Effects = new SimpleCollisionEffects[]
-            {
-                new()
-                {
-                    TerrainCollisionSounds = new(GenericParameters.TerrainHitSound)
-                }
-            }
         };
 
         Attack = new(Id, 0);
@@ -72,18 +69,22 @@ public class GenericMeleeWeapon : MeleeWeaponItem
             {
                 RunParameters.EaseIn(GenericParameters.AttackWindUpMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, ProgressModifierType.SinQuadratic),
                 RunParameters.Play(GenericParameters.AttackDurationMs / 1000.0f, GenericParameters.AttackAnimationWindupFrame, GenericParameters.AttackAnimationStrikeFrame, ProgressModifierType.Linear),
-                RunParameters.EaseOut(GenericParameters.AttackEaseOutMs / 1000.0f, ProgressModifierType.Sin)
+                RunParameters.EaseOut(GenericParameters.AttackEaseOutMs * EaseOutAnimationFactor / 1000.0f, ProgressModifierType.Bounce)
             };
         }
 
 
         StrikeSound = new(GenericParameters.StrikeSound);
+        TerrainHitSound = new(GenericParameters.TerrainHitSound);
         DebugCollider = new(GenericParameters.Collider);
+        EntityHitParticles = GenericParameters.EntityHitParticles == "" ? null : system.ParticleEffectsManager?.Get(GenericParameters.EntityHitParticles);
+        TerrainHitParticles = GenericParameters.TerrainHitParticles == "" ? null : system.ParticleEffectsManager?.Get(GenericParameters.TerrainHitParticles);
     }
 
     public override void OnDeselected(EntityPlayer player)
     {
         MeleeSystem?.Stop(rightHand: true);
+        Api?.World.UnregisterCallback(CooldownCallback);
     }
 
     public override void OnHeldRenderOpaque(ItemSlot inSlot, IClientPlayer byPlayer)
@@ -114,14 +115,20 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     protected AttackId Attack { get; private set; } = new(0, 0);
     protected RunParameters[] AnimationParameters { get; private set; } = Array.Empty<RunParameters>();
     protected AssetLocation? StrikeSound { get; set; }
+    protected AssetLocation? TerrainHitSound { get; set; }
+    protected AdvancedParticleProperties? EntityHitParticles { get; set; }
+    protected AdvancedParticleProperties? TerrainHitParticles { get; set; }
+
+    protected long CooldownCallback = 0;
+    protected const float EaseOutAnimationFactor = 2.0f;
 
     [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+        if (AltPressed() || !mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) == MeleeWeaponState.Active) return false;
 
         MeleeSystem?.Start(Attack, result => OnAttackCallback(result, slot, direction, mainHand), direction);
-        Behavior?.PlayAnimation(AttackAnimation, true, true, null, AnimationParameters);
+        Behavior?.PlayAnimation(AttackAnimation, mainHand, true, null, AnimationParameters);
         state = MeleeWeaponState.Active;
 
         Api?.World.PlaySoundAt(StrikeSound, player);
@@ -131,15 +138,40 @@ public class GenericMeleeWeapon : MeleeWeaponItem
 
     protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction, bool mainHand)
     {
-        Console.WriteLine(result.Result);
-        
+        if (EntityHitParticles != null)
+        {
+            foreach ((_, Vector3 point) in result.Entities)
+            {
+                EntityHitParticles.basePos.X = point.X;
+                EntityHitParticles.basePos.Y = point.Y;
+                EntityHitParticles.basePos.Z = point.Z;
+                
+                Api?.World.SpawnParticles(EntityHitParticles);
+            }
+        }
+
+        if (TerrainHitParticles != null)
+        {
+            foreach ((_, Vector3 point) in result.Terrain)
+            {
+                TerrainHitParticles.basePos.X = point.X;
+                TerrainHitParticles.basePos.Y = point.Y;
+                TerrainHitParticles.basePos.Z = point.Z;
+
+                Api?.World.SpawnParticles(TerrainHitParticles);
+            }
+        }
+
+
         if ((result.Result & AttackResultFlag.HitTerrain) != 0)
         {
             MeleeSystem?.Stop();
             Behavior?.StopAnimation(mainHand);
-            Behavior?.SetState(MeleeWeaponState.Idle);
+            Behavior?.SetState(MeleeWeaponState.Cooldown);
+            Api?.World.PlaySoundAt(TerrainHitSound, Api?.World.Player);
+            CooldownCallback = Api?.World.RegisterCallback(dt => Behavior?.SetState(MeleeWeaponState.Idle), GenericParameters.AttackEaseOutMs + GenericParameters.AttackDurationMs) ?? 0;
         }
-        
+
         if (result.Result == AttackResultFlag.Finished)
         {
             MeleeSystem?.Stop();

@@ -1,6 +1,8 @@
 ﻿using AnimationManagerLib;
 using AnimationManagerLib.API;
+using ImGuiNET;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 
 namespace MeleeWeaponsFramework;
 
@@ -83,7 +85,7 @@ public class GenericShield : MeleeShieldItem
     [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
     protected virtual bool OnBlock(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+        if (AltPressed() || mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
 
         state = MeleeWeaponState.Active;
 

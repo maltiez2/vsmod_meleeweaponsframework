@@ -16,6 +16,8 @@
 		"value": {
 			"IdleAnimation": "idle1",
 			"ReadyAnimation": "idle1",
+			"EntityHitParticles": "meleeweaponsframework:entity-hit-success",
+			"TerrainHitParticles": "meleeweaponsframework:terrain-hit-fail",
 			"AttackAnimationByType": {
 				"blade-forlorn-iron": "meleeweaponsframework-spear-hit",
 				"blade-blackguard-iron": "meleeweaponsframework-spear-hit",

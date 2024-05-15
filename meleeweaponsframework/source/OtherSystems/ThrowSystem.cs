@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using System;
 using System.Collections.ObjectModel;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -102,6 +103,7 @@ public class ThrowSystemClient : ThrowSystem
     public ThrowSystemClient(ICoreClientAPI api)
     {
         _api = api;
+        _random = new(0, 1, EnumDistribution.GAUSSIAN);
         _clientChannel = api.Network.RegisterChannel(NetworkChannelId)
             .RegisterMessageType<ThrowAttackPacket>();
     }
@@ -122,11 +124,13 @@ public class ThrowSystemClient : ThrowSystem
     public void Throw(ThrowAttackId id, bool rightHand = true)
     {
         _player = _api.World.Player.Entity;
-        _player.Attributes.SetInt("aiming", 0);
+        
 
         float accuracy = _player.Attributes.GetFloat("aimingAccuracy");
-        float aimingRandPitch = (float)_player.WatchedAttributes.GetDouble("aimingRandPitch", 1.0);
-        float aimingRandYaw = (float)_player.WatchedAttributes.GetDouble("aimingRandYaw", 1.0);
+        float aimingRandPitch = _random.nextFloat();
+        float aimingRandYaw = _random.nextFloat();
+
+        _player.Attributes.SetInt("aiming", 0);
 
         ThrowAttackPacket packet = new()
         {
@@ -151,12 +155,13 @@ public class ThrowSystemClient : ThrowSystem
             slot = _player.LeftHandItemSlot;
         }
 
-        _attacks[id].SpawnProjectile(_player, slot.TakeOut(1), _api, packet);
+        //_attacks[id].SpawnProjectile(_player, slot.TakeOut(1), _api, packet);
     }
 
     private readonly Dictionary<ThrowAttackId, IThrowAttack> _attacks = new();
     private readonly IClientNetworkChannel _clientChannel;
     private readonly ICoreClientAPI _api;
+    private readonly NatFloat _random;
     private EntityPlayer _player;
 }
 

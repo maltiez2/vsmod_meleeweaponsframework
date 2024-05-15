@@ -15,7 +15,7 @@ public interface IParticleEffectsManager
 
 public class ParticleEffectsManager : IParticleEffectsManager
 {
-    private readonly Dictionary<string, AdvancedParticleProperties> mParticleProperties = new();
+    private readonly Dictionary<string, AdvancedParticleProperties> _particleProperties = new();
 
     public ParticleEffectsManager(ICoreAPI api)
     {
@@ -30,7 +30,7 @@ public class ParticleEffectsManager : IParticleEffectsManager
             foreach ((string code, JToken? effect) in token)
             {
                 JsonObject effectJson = new(effect);
-                mParticleProperties.Add($"{domain}:{code}", effectJson.AsObject<AdvancedParticleProperties>());
+                _particleProperties.Add($"{domain}:{code}", effectJson.AsObject<AdvancedParticleProperties>());
             }
         }
     }
@@ -38,17 +38,23 @@ public class ParticleEffectsManager : IParticleEffectsManager
     public AdvancedParticleProperties? Get(string code, string domain)
     {
         string key = $"{domain}:{code}";
-        if (!mParticleProperties.ContainsKey(key)) return null;
-        return mParticleProperties[key];
+        if (!_particleProperties.ContainsKey(key)) return null;
+        return _particleProperties[key];
     }
 
-    private int mSelected = 0;
+    public AdvancedParticleProperties? Get(string key)
+    {
+        if (!_particleProperties.ContainsKey(key)) return null;
+        return _particleProperties[key];
+    }
+
+    private int _selected = 0;
     public void Draw(string id)
     {
 #if DEBUG
-        string[] keys = mParticleProperties.Keys.ToArray();
-        ImGui.ListBox($"Effects##{id}", ref mSelected, keys, mParticleProperties.Count);
-        ParticleEditor.Draw(id, mParticleProperties[keys[mSelected]]);
+        string[] keys = _particleProperties.Keys.ToArray();
+        ImGui.ListBox($"Effects##{id}", ref _selected, keys, _particleProperties.Count);
+        ParticleEditor.Draw(id, _particleProperties[keys[_selected]]);
 #endif
     }
 }

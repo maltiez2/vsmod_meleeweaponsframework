@@ -1,6 +1,7 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
+using VSImGui.Debug;
 
 namespace MeleeWeaponsFramework;
 
@@ -53,7 +54,6 @@ public sealed class AttackDirectionController
     public AttackDirectionController(ICoreClientAPI api, DirectionCursorRenderer renderer)
     {
         _api = api;
-        _player = api.World.Player;
         _directionCursorRenderer = renderer;
 
         for (int count = 0; count < Depth * 2; count++)
@@ -79,12 +79,7 @@ public sealed class AttackDirectionController
 
         MouseMovementData previous = _directionQueue.Dequeue();
 
-        float angle = MathF.Atan2(previous.Yaw - yaw, previous.Pitch - pitch) * GameMath.RAD2DEG;
-        if (angle < 0)
-        {
-            angle += 360;
-        }
-        int direction = GetDirectionNumber(angle, DivideCircle((int)DirectionsConfiguration, -360f / (int)DirectionsConfiguration / 2)) - 1;
+        int direction = CalculateDirection(previous.Yaw - yaw, previous.Pitch - pitch, (int)DirectionsConfiguration);
 
         float delta = _directionQueue.Last().DeltaPitch * _directionQueue.Last().DeltaPitch + _directionQueue.Last().DeltaYaw * _directionQueue.Last().DeltaYaw;
 
@@ -96,36 +91,9 @@ public sealed class AttackDirectionController
         }
     }
 
-    private static float[] DivideCircle(int N, float offset)
-    {
-        float[] angles = new float[N];
-        float angleIncrement = 360f / N;
-
-        for (int i = 0; i < N; i++)
-        {
-            angles[i] = (angleIncrement * i + offset) % 360;
-        }
-
-        return angles;
-    }
-
-    private static int GetDirectionNumber(float angle, float[] partCenters)
-    {
-        int partNumber = -1;
-        for (int i = 0; i < partCenters.Length; i++)
-        {
-            if (angle >= partCenters[i] && angle < (i == partCenters.Length - 1 ? 360 : partCenters[i + 1]))
-            {
-                partNumber = i + 1;
-                break;
-            }
-        }
-        return partNumber;
-    }
 
     private const float _sensitivityFactor = 1e-5f;
     private readonly ICoreClientAPI _api;
-    private readonly IPlayer _player;
     private readonly Queue<MouseMovementData> _directionQueue = new();
     private readonly DirectionCursorRenderer _directionCursorRenderer;
     private readonly Dictionary<DirectionsConfiguration, List<int>> _configurations = new()
@@ -136,4 +104,13 @@ public sealed class AttackDirectionController
         { DirectionsConfiguration.Star, new() {0, 1, 3, 5, 7} },
         { DirectionsConfiguration.Eight, new() {0, 1, 2, 3, 4, 5, 6, 7, 8} }
     };
+
+    private int CalculateDirection(float yaw, float pitch, int directionsCount)
+    {
+        float angleSegment = 360f / directionsCount;
+        float directionOffset = angleSegment / 2f;
+        float angle = MathF.Atan2(yaw, pitch) * GameMath.RAD2DEG;
+        float angleOffset = angle + directionOffset + 360;
+        return (int)(angleOffset / angleSegment) % directionsCount;
+    }
 }

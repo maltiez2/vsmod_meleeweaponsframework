@@ -19,6 +19,16 @@
         "1/enabled": "Vanilla_shields_patch",
         "2/enabled": "Vanilla_shields_patch"
       }
+    },
+    "string": {
+      "meleeweaponsframework:patches/weapons/spears.json": {
+        "1/value/EntityHitParticles": "(Hit_particles) ? Entity_hit_particles : Empty_hit_particles",
+        "1/value/TerrainHitParticles": "(Hit_particles) ? Terrain_hit_particles : Empty_hit_particles"
+      },
+      "meleeweaponsframework:patches/weapons/swords.json": {
+        "1/value/EntityHitParticles": "(Hit_particles) ? Entity_hit_particles : Empty_hit_particles",
+        "1/value/TerrainHitParticles": "(Hit_particles) ? Terrain_hit_particles : Empty_hit_particles"
+      }
     }
   },
   "settings": [
@@ -52,6 +62,13 @@
       "title": "Rendering patches"
     },
     {
+      "code": "Hit_particles",
+      "ingui": "hit-particles",
+      "type": "boolean",
+      "comment": "hit-particles-desc",
+      "default": true
+    },
+    {
       "code": "Vanilla_spears_rendering_patch",
       "ingui": "vanilla-spears-rednering",
       "type": "boolean",
@@ -64,6 +81,24 @@
       "type": "boolean",
       "comment": "vanilla-swords-rednering-desc",
       "default": true
+    },
+    {
+      "code": "Entity_hit_particles",
+      "type": "string",
+      "hide": true,
+      "default": "meleeweaponsframework:entity-hit-success"
+    },
+    {
+      "code": "Terrain_hit_particles",
+      "type": "string",
+      "hide": true,
+      "default": "meleeweaponsframework:terrain-hit-fail"
+    },
+    {
+      "code": "Empty_hit_particles",
+      "type": "string",
+      "hide": true,
+      "default": ""
     }
   ]
 }
