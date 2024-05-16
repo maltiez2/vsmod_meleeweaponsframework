@@ -20,6 +20,7 @@
           "WindUpMs": 100,
           "DurationMs": 500,
           "EaseOutMs": 300,
+<<<<<<< HEAD
           "AttackDamage": 3,
           "AttackTier": 2,
           "AttackDamageType": "BluntAttack"
@@ -32,6 +33,18 @@
           "WindUpMs": 100,
           "DurationMs": 500,
           "EaseOutMs": 300,
+=======
+          "Damage": 3,
+          "Tier": 2,
+          "DamageType": "BluntAttack"
+        },
+        "BottomLeft": {
+          "AttackAnimation": "falx",
+          "Collider": [0.2, 0, 0.5, 1.3, 0, 0.1],
+          "AttackWindUpMs": 100,
+          "AttackDurationMs": 500,
+          "AttackEaseOutMs": 300,
+>>>>>>> dev
           "AttackDamage": 3,
           "AttackTier": 2,
           "AttackDamageType": "BluntAttack",

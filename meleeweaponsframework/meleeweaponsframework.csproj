@@ -56,15 +56,9 @@
     <SubModuleAMlibOutput>$(SubmoduleAMlib)\bin\$(Configuration)\Mods\animationmanagerlib</SubModuleAMlibOutput>
   </PropertyGroup>
 
-  <!-- Startup settings -->
-  <PropertyGroup>
-    <DataFolderName>VintagestoryDataDev</DataFolderName>
-    <AppDataDir>C:\Users\user\AppData\Roaming</AppDataDir>
-    <DataFolder>$(AppDataDir)\$(DataFolderName)</DataFolder>
-    <AditionalModsFolder>$(AppDataDir)\$(DataFolderName)\Mods</AditionalModsFolder>
-    <WorldName>test_$(ModId)</WorldName>
-    <ModDir>$(ProjectDir)\$(OutputDir)</ModDir>
-  </PropertyGroup>
+  <!-- Startup settings are imported from an external file. -->
+  <!-- Copy StartupSettingsTemplate.props to StartupSettings.props to get properties set for your machine. -->
+  <Import Project="$(ProjectDir)\StartupSettings.props"/>
 
   <!-- References to libraries that are being used in project -->
   <ItemGroup>

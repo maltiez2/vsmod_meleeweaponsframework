@@ -110,10 +110,10 @@ public enum GripType
 public class DirectionalWeapon : Item, IMeleeWeaponItem
 {
     public int WeaponItemId => ItemId;
-    public virtual IPlayerAnimationData IdleAnimation => Grip == GripType.OneHanded ? IdleOneHandedAnimation : IdleTwoHandedAnimation;
-    public virtual IPlayerAnimationData ReadyAnimation => Grip == GripType.OneHanded ? ReadyOneHandedAnimation : ReadyTwoHandedAnimation;
-    public virtual IPlayerAnimationData IdleAnimationOffhand => IdleOffhandAnimation;
-    public virtual IPlayerAnimationData ReadyAnimationOffhand => ReadyOffhandAnimation;
+    public virtual PlayerAnimationData IdleAnimation => Grip == GripType.OneHanded ? IdleOneHandedAnimation : IdleTwoHandedAnimation;
+    public virtual PlayerAnimationData ReadyAnimation => Grip == GripType.OneHanded ? ReadyOneHandedAnimation : ReadyTwoHandedAnimation;
+    public virtual PlayerAnimationData IdleAnimationOffhand => IdleOffhandAnimation;
+    public virtual PlayerAnimationData ReadyAnimationOffhand => ReadyOffhandAnimation;
     public virtual DirectionsConfiguration DirectionsType => Grip == GripType.OneHanded ? DirectionsConfigurationOneHanded : DirectionsConfigurationTwoHanded;
     public virtual bool RenderDirectionCursor { get; protected set; } = true;
 
@@ -130,12 +130,20 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             ServerMeleeSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemServer;
             ServerBlockSystem = serverApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemServer;
         }
+<<<<<<< HEAD
+        
+        if (api is ICoreClientAPI clientApi)
+        {
+            MeleeSystem = clientApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
+            BlockSystem = clientApi.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+=======
 
         if (api is ICoreClientAPI clientAPI)
         {
             Api = clientAPI;
             MeleeSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().MeleeSystemClient;
             BlockSystem = Api.ModLoader.GetModSystem<MeleeWeaponsFrameworkModSystem>().BlockSystemClient;
+>>>>>>> dev
         }
 
         ConstructAnimations();
