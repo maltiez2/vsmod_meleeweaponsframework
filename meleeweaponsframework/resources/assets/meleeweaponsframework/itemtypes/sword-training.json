@@ -10,6 +10,7 @@
       "ReadyAnimationTwoHanded": "axeready",
       "DirectionsConfigurationOneHanded": "Triangle",
       "DirectionsConfigurationTwoHanded": "TopBottom",
+      "VanillaAnimationsNaming": true,
       "CanChangeGrip": true,
       "AttacksOneHanded": {
         "Top": {

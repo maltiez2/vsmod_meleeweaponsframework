@@ -26,7 +26,7 @@ public class DirectionalWeaponParameters
 
     public bool StopOnCollisionWithTerrain { get; set; } = false;
     public bool StopOnCollisionWithEntity { get; set; } = false;
-
+    public bool VanillaAnimationsNaming { get; set; } = false;
     public bool CanChangeGrip { get; set; } = false;
     public string DefaultGrip { get; set; } = "OneHanded";
     public float GripChangeCooldownMs { get; set; } = 200;
@@ -240,22 +240,22 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected MeleeBlockSystemServer? ServerBlockSystem { get; private set; }
     protected ICoreClientAPI? Api { get; private set; }
 
-    protected PlayerAnimationData IdleOneHandedAnimation { get; set; }
-    protected PlayerAnimationData ReadyOneHandedAnimation { get; set; }
-    protected PlayerAnimationData IdleTwoHandedAnimation { get; set; }
-    protected PlayerAnimationData ReadyTwoHandedAnimation { get; set; }
-    protected PlayerAnimationData IdleOffhandAnimation { get; set; }
-    protected PlayerAnimationData ReadyOffhandAnimation { get; set; }
+    protected IPlayerAnimationData IdleOneHandedAnimation { get; set; }
+    protected IPlayerAnimationData ReadyOneHandedAnimation { get; set; }
+    protected IPlayerAnimationData IdleTwoHandedAnimation { get; set; }
+    protected IPlayerAnimationData ReadyTwoHandedAnimation { get; set; }
+    protected IPlayerAnimationData IdleOffhandAnimation { get; set; }
+    protected IPlayerAnimationData ReadyOffhandAnimation { get; set; }
     protected DirectionsConfiguration DirectionsConfigurationOneHanded { get; set; } = DirectionsConfiguration.None;
     protected DirectionsConfiguration DirectionsConfigurationTwoHanded { get; set; } = DirectionsConfiguration.None;
 
     protected LineSegmentCollider DebugCollider { get; set; }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsTwoHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsTwoHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsTwoHanded { get; set; } = new();
 
     protected Dictionary<AttackDirection, int> ParriesCooldownsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, int> ParriesCooldownsTwoHanded { get; set; } = new();
@@ -411,14 +411,14 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         if (animationSystem == null) return;
 
-        IdleOneHandedAnimation = new(DirectionalWeaponParameters.IdleAnimationOneHanded, animationSystem);
-        IdleTwoHandedAnimation = new(DirectionalWeaponParameters.IdleAnimationTwoHanded, animationSystem);
+        IdleOneHandedAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.IdleAnimationOneHanded, animationSystem);
+        IdleTwoHandedAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.IdleAnimationTwoHanded, animationSystem);
 
-        ReadyOneHandedAnimation = new(DirectionalWeaponParameters.ReadyAnimationOneHanded, animationSystem);
-        ReadyTwoHandedAnimation = new(DirectionalWeaponParameters.ReadyAnimationTwoHanded, animationSystem);
+        ReadyOneHandedAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.ReadyAnimationOneHanded, animationSystem);
+        ReadyTwoHandedAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.ReadyAnimationTwoHanded, animationSystem);
 
-        IdleOffhandAnimation = new(DirectionalWeaponParameters.IdleAnimationOffhandOneHanded, animationSystem);
-        ReadyOffhandAnimation = new(DirectionalWeaponParameters.ReadyAnimationOffhandOneHanded, animationSystem);
+        IdleOffhandAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.IdleAnimationOffhandOneHanded, animationSystem);
+        ReadyOffhandAnimation = new PlayerSimpleAnimationData(DirectionalWeaponParameters.ReadyAnimationOffhandOneHanded, animationSystem);
 
         DirectionsConfigurationOneHanded = Enum.Parse<DirectionsConfiguration>(DirectionalWeaponParameters.DirectionsConfigurationOneHanded);
         DirectionsConfigurationTwoHanded = Enum.Parse<DirectionsConfiguration>(DirectionalWeaponParameters.DirectionsConfigurationTwoHanded);
@@ -566,9 +566,9 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             Directions = directions
         };
     }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseAttacksAnimationsFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks)
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> ParseAttacksAnimationsFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks)
     {
-        Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> result = new();
+        Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> result = new();
         AnimationManagerLibSystem? animationSystem = Api?.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         if (animationSystem == null) return result;
 
@@ -590,16 +590,24 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
                 };
             }
 
-            PlayerAnimationData animation = new(stats.Animation, animationSystem);
+            IPlayerAnimationData animation;
+            if (DirectionalWeaponParameters.VanillaAnimationsNaming)
+            {
+                animation = new PlayerSimpleAnimationData(stats.Animation, animationSystem);
+            }
+            else
+            {
+                animation = new PlayerAnimationData(stats.Animation, animationSystem);
+            }
 
             result.Add(Enum.Parse<AttackDirection>(direction), (animation, parameters));
         }
 
         return result;
     }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseParriesAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> ParseParriesAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
     {
-        Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> result = new();
+        Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> result = new();
         AnimationManagerLibSystem? animationSystem = Api?.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         if (animationSystem == null) return result;
 
@@ -619,16 +627,24 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
                 };
             }
 
-            PlayerAnimationData animation = new(stats.Animation, animationSystem);
+            IPlayerAnimationData animation;
+            if (DirectionalWeaponParameters.VanillaAnimationsNaming)
+            {
+                animation = new PlayerSimpleAnimationData(stats.Animation, animationSystem);
+            }
+            else
+            {
+                animation = new PlayerAnimationData(stats.Animation, animationSystem);
+            }
 
             result.Add(Enum.Parse<AttackDirection>(direction), (animation, parameters));
         }
 
         return result;
     }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseParriesEaseOutAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
+    protected Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> ParseParriesEaseOutAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
     {
-        Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> result = new();
+        Dictionary<AttackDirection, (IPlayerAnimationData animation, RunParameters[] paremters)> result = new();
         AnimationManagerLibSystem? animationSystem = Api?.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         if (animationSystem == null) return result;
 
@@ -648,7 +664,15 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
                 };
             }
 
-            PlayerAnimationData animation = new(stats.Animation, animationSystem);
+            IPlayerAnimationData animation;
+            if (DirectionalWeaponParameters.VanillaAnimationsNaming)
+            {
+                animation = new PlayerSimpleAnimationData(stats.Animation, animationSystem);
+            }
+            else
+            {
+                animation = new PlayerAnimationData(stats.Animation, animationSystem);
+            }
 
             result.Add(Enum.Parse<AttackDirection>(direction), (animation, parameters));
         }
