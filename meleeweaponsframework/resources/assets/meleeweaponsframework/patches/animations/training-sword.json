@@ -1,0 +1,66 @@
+[
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-idle", "animation": "meleeweaponsframework-training-2h-idle", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-idle",
+      "code": "meleeweaponsframework-training-2h-idle",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmR": { "rotationX": -39.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 19.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": -4.0, "rotationZ": -35.0 },
+						"LowerArmL": { "rotationX": 34.0, "rotationY": -9.0, "rotationZ": -3.0 }
+					}
+				}
+      ]
+    }
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-ready", "animation": "meleeweaponsframework-training-2h-ready", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-ready",
+      "code": "meleeweaponsframework-training-2h-ready",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -57.0 },
+						"LowerArmR": { "rotationX": -39.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"ItemAnchor": { "rotationX": 34.0, "rotationY": 0.0, "rotationZ": 14.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -39.0 },
+						"LowerArmL": { "rotationX": 36.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				}
+      ]
+    }
+  }
+]

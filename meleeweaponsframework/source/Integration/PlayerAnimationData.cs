@@ -77,6 +77,28 @@ public readonly struct PlayerAnimationData : IPlayerAnimationData
         system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(TpLegs, parameters), synchronize: true);
         system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(FpLegs, parameters), synchronize: false);
     }
+    public void Start(Entity entity, IAnimationManagerSystem system, PlayerAnimationData followUp, RunParameters followUpParameters, params RunParameters[] parameters)
+    {
+        AnimationRequest followUpRequestTpHands = new(followUp.TpHands, followUpParameters);
+        AnimationRequest followUpRequestFpHands = new(followUp.FpHands, followUpParameters);
+        AnimationRequest followUpRequestTpLegs = new(followUp.TpLegs, followUpParameters);
+        AnimationRequest followUpRequestFpLegs = new(followUp.FpLegs, followUpParameters);
+
+        AnimationId idTpHands = TpHands;
+        AnimationId idFpHands = FpHands;
+        AnimationId idTpLegs = TpLegs;
+        AnimationId idFpLegs = FpLegs;
+
+        AnimationRequest[] requestsTpHands = parameters.Select(parameters => new AnimationRequest(idTpHands, parameters)).Append(followUpRequestTpHands).ToArray();
+        AnimationRequest[] requestsFpHands = parameters.Select(parameters => new AnimationRequest(idFpHands, parameters)).Append(followUpRequestFpHands).ToArray();
+        AnimationRequest[] requestsTpLegs = parameters.Select(parameters => new AnimationRequest(idTpLegs, parameters)).Append(followUpRequestTpLegs).ToArray();
+        AnimationRequest[] requestsFpLegs = parameters.Select(parameters => new AnimationRequest(idFpLegs, parameters)).Append(followUpRequestFpLegs).ToArray();
+
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(requestsTpHands), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(requestsFpHands), synchronize: false);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(requestsTpLegs), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(requestsFpLegs), synchronize: false);
+    }
     /// <summary>
     /// Eases out animations.
     /// </summary>
@@ -155,6 +177,21 @@ public readonly struct PlayerSimpleAnimationData : IPlayerAnimationData
     {
         system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(Tp, parameters), synchronize: true);
         system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(Fp, parameters), synchronize: false);
+    }
+
+    public void Start(Entity entity, IAnimationManagerSystem system , PlayerSimpleAnimationData followUp, RunParameters followUpParameters, params RunParameters[] parameters)
+    {
+        AnimationRequest followUpRequestTp = new(followUp.Tp, followUpParameters);
+        AnimationRequest followUpRequestFp = new(followUp.Fp, followUpParameters);
+
+        AnimationId idTp = Tp;
+        AnimationId idFp = Fp;
+
+        AnimationRequest[] requestsTp = parameters.Select(parameters => new AnimationRequest(idTp, parameters)).Append(followUpRequestTp).ToArray();
+        AnimationRequest[] requestsFp = parameters.Select(parameters => new AnimationRequest(idFp, parameters)).Append(followUpRequestFp).ToArray();
+
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityThirdPerson), new(requestsTp), synchronize: true);
+        system.Run(new(entity.EntityId, AnimationTargetType.EntityFirstPerson), new(requestsFp), synchronize: false);
     }
     /// <summary>
     /// Eases out animations.

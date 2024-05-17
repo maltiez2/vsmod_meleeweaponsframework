@@ -1,6 +1,5 @@
 ﻿using AnimationManagerLib;
 using AnimationManagerLib.API;
-using System.Collections.Generic;
 using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -102,6 +101,38 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         else
         {
             animation.Start(entity, _animationSystem, parameters);
+            _currentOffHandAnimation = animation;
+        }
+    }
+    public void PlayAnimation(PlayerSimpleAnimationData animation, PlayerSimpleAnimationData followUp, TimeSpan followUpEaseIn, bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null, params RunParameters[] parameters)
+    {
+        if (!_mainPlayer) return;
+        ResetIdleTimer(idleAnimationDelay, playIdleAnimation);
+
+        if (mainHand)
+        {
+            animation.Start(entity, _animationSystem, followUp, RunParameters.EaseIn(followUpEaseIn, 0, ProgressModifierType.Linear), parameters);
+            _currentMainHandAnimation = animation;
+        }
+        else
+        {
+            animation.Start(entity, _animationSystem, followUp, RunParameters.EaseIn(followUpEaseIn, 0, ProgressModifierType.Linear), parameters);
+            _currentOffHandAnimation = animation;
+        }
+    }
+    public void PlayAnimation(PlayerAnimationData animation, PlayerAnimationData followUp, TimeSpan followUpEaseIn, bool mainHand = true, bool playIdleAnimation = true, TimeSpan? idleAnimationDelay = null, params RunParameters[] parameters)
+    {
+        if (!_mainPlayer) return;
+        ResetIdleTimer(idleAnimationDelay, playIdleAnimation);
+
+        if (mainHand)
+        {
+            animation.Start(entity, _animationSystem, followUp, RunParameters.EaseIn(followUpEaseIn, 0, ProgressModifierType.Linear), parameters);
+            _currentMainHandAnimation = animation;
+        }
+        else
+        {
+            animation.Start(entity, _animationSystem, followUp, RunParameters.EaseIn(followUpEaseIn, 0, ProgressModifierType.Linear), parameters);
             _currentOffHandAnimation = animation;
         }
     }
