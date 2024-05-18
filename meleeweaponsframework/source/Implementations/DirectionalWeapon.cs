@@ -269,7 +269,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected bool CanParry => Grip == GripType.OneHanded ? ParriesAnimationsOneHanded.Any() : ParriesAnimationsTwoHanded.Any();
     protected bool CanAttack => Grip == GripType.OneHanded ? AttacksAnimationsOneHanded.Any() : AttacksAnimationsTwoHanded.Any();
 
-    [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttackOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.OneHanded) return false;
@@ -292,7 +292,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         return true;
     }
-    [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Pressed)]
     protected virtual bool OnAttackTwoHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.TwoHanded) return false;
@@ -323,7 +323,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
             Behavior?.SetState(MeleeWeaponState.Idle);
         }
     }
-    [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
     protected virtual bool OnBlockOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.OneHanded) return false;
@@ -341,7 +341,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         return true;
     }
-    [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
     protected virtual bool OnBlockTwoHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.TwoHanded) return false;
@@ -391,7 +391,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         return true;
     }
-    [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
     protected virtual bool OnChangeGrip(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (!DirectionalWeaponParameters.CanChangeGrip) return false;
@@ -596,7 +596,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
                 parameters = new RunParameters[]
                 {
                     RunParameters.EaseIn(stats.WindUpMs / 1000.0f, stats.AnimationWindupFrame, ProgressModifierType.SinQuadratic),
-                    RunParameters.Play(stats.DurationMs / 1000.0f, stats.AnimationWindupFrame, stats.AnimationStrikeFrame, ProgressModifierType.Linear),
+                    RunParameters.Play(stats.DurationMs / 1000.0f, stats.AnimationWindupFrame, stats.AnimationStrikeFrame, ProgressModifierType.Cubic),
                 };
             }
 

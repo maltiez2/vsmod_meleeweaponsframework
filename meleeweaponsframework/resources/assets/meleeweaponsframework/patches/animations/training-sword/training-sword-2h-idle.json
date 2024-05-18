@@ -1,0 +1,120 @@
+[
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-idle-tp-hands", "animation": "meleeweaponsframework-training-2h-idle-tp-hands", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-idle-tp-hands",
+      "code": "meleeweaponsframework-training-2h-idle-tp-hands",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmR": { "rotationX": -39.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 19.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": -4.0, "rotationZ": -35.0 },
+						"LowerArmL": { "rotationX": 34.0, "rotationY": -9.0, "rotationZ": -3.0 }
+					}
+				}
+      ]
+    }
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-idle-fp-hands", "animation": "meleeweaponsframework-training-2h-idle-fp-hands", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-idle-fp-hands",
+      "code": "meleeweaponsframework-training-2h-idle-fp-hands",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmR": { "rotationX": -39.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 19.0, "rotationZ": 0.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": -4.0, "rotationZ": -35.0 },
+						"LowerArmL": { "rotationX": 34.0, "rotationY": -9.0, "rotationZ": -3.0 }
+					}
+				}
+      ]
+    }
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-idle-tp-legs", "animation": "meleeweaponsframework-training-2h-idle-tp-legs", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-idle-tp-legs",
+      "code": "meleeweaponsframework-training-2h-idle-tp-legs",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+					}
+				}
+      ]
+    }
+  },
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-idle-fp-legs", "animation": "meleeweaponsframework-training-2h-idle-fp-legs", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-idle-fp-legs",
+      "code": "meleeweaponsframework-training-2h-idle-fp-legs",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 1,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+					}
+				}
+      ]
+    }
+  }
+]

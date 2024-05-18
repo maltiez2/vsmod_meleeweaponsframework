@@ -19,7 +19,7 @@ public readonly struct PlayerAnimationData : IPlayerAnimationData
     public readonly AnimationId FpLegs;
 
     public const float DefaultHandsCategoryWeight = 512f;
-    public const float DefaultLegsCategoryWeight = 16f;
+    public const float DefaultLegsCategoryWeight = 8f;
 
     /// <summary>
     /// Registers animations for player model and stores ids for future use.
@@ -27,15 +27,17 @@ public readonly struct PlayerAnimationData : IPlayerAnimationData
     /// <param name="code">Prefix for animation code, animation should be named like '{code}-{fp/tp}-{hands/legs}'</param>
     /// <param name="system"></param>
     /// <param name="easeInFrame">Frame used in <see cref="Start(Entity, IAnimationManagerSystem, TimeSpan)"/> method for EaseIn animation that is used by <see cref="MeleeWeaponPlayerBehavior"/> for Idle and Ready animations.</param>
-    public PlayerAnimationData(string code, IAnimationManagerSystem system, float easeInFrame = 0f)
+    public PlayerAnimationData(string code, IAnimationManagerSystem system, bool mainHand = true, float easeInFrame = 0f)
     {
         string tpHandsCode = $"{code}-tp-hands";
         string fpHandsCode = $"{code}-fp-hands";
         string tpLegsCode = $"{code}-tp-legs";
         string fpLegsCode = $"{code}-fp-legs";
 
-        TpHands = new("MeleeWeaponsFramework:TpHands", tpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
-        FpHands = new("MeleeWeaponsFramework:FpHands", fpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
+        string categorySuffix = mainHand ? "mainHand" : "offhand";
+
+        TpHands = new("MeleeWeaponsFramework:TpHands" + categorySuffix, tpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
+        FpHands = new("MeleeWeaponsFramework:FpHands" + categorySuffix, fpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
         TpLegs = new("MeleeWeaponsFramework:TpLegs", tpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
         FpLegs = new("MeleeWeaponsFramework:FpLegs", fpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
 
@@ -138,13 +140,15 @@ public readonly struct PlayerSimpleAnimationData : IPlayerAnimationData
     /// <param name="code"></param>
     /// <param name="system"></param>
     /// <param name="easeInFrame">Frame used in <see cref="Start(Entity, IAnimationManagerSystem, TimeSpan)"/> method for EaseIn animation that is used by <see cref="MeleeWeaponPlayerBehavior"/> for Idle and Ready animations.</param>
-    public PlayerSimpleAnimationData(string code, IAnimationManagerSystem system, float easeInFrame = 0f)
+    public PlayerSimpleAnimationData(string code, IAnimationManagerSystem system, bool mainHand = true, float easeInFrame = 0f)
     {
         string tpCode = $"{code}";
         string fpCode = $"{code}-fp";
 
-        Tp = new("MeleeWeaponsFramework:TpHands", tpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
-        Fp = new("MeleeWeaponsFramework:FpHands", fpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
+        string categorySuffix = mainHand ? "mainHand" : "offhand";
+
+        Tp = new("MeleeWeaponsFramework:TpHands" + categorySuffix, tpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
+        Fp = new("MeleeWeaponsFramework:FpHands" + categorySuffix, fpCode, EnumAnimationBlendMode.Average, DefaultCategoryWeight);
 
         AnimationData tpData = AnimationData.Player(tpCode);
         AnimationData fpData = AnimationData.Player(fpCode);

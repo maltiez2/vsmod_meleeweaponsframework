@@ -29,7 +29,7 @@ public class GenericShield : MeleeShieldItem
         base.OnLoaded(api);
 
         GenericParameters = Attributes[MeleeWeaponStatsAttribute].AsObject<GenericShieldParameters>();
-        BlockAnimation = new(GenericParameters.BlockAnimation, api.ModLoader.GetModSystem<AnimationManagerLibSystem>());
+        BlockAnimation = new(GenericParameters.BlockAnimation, api.ModLoader.GetModSystem<AnimationManagerLibSystem>(), mainHand: false);
 
         EaseInAnimationParameters = new RunParameters[]
         {

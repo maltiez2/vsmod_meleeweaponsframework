@@ -161,12 +161,26 @@ public sealed class ActionListener : IDisposable
         EnumEntityAction.CtrlKey,
     };
     private readonly ICoreClientAPI _clientApi;
+    private bool _suppressLMB = false;
+    private bool _suppressRMB = false;
 
     private void OnEntityAction(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
+        Console.WriteLine($"{action} - {on} - {_suppressLMB}");
+
+        //if (_suppressLMB && action == EnumEntityAction.LeftMouseDown) handled = EnumHandling.Handled;
+
         if (_tyronDecidedToMakeThisActionsInconsistent_ThanksTyron.Contains(action))
         {
             OnEntityActionInconsistent(action, ref handled);
+
+            if (_suppressLMB && action == EnumEntityAction.InWorldLeftMouseDown) handled = EnumHandling.Handled;
+            if (_suppressRMB && action == EnumEntityAction.InWorldRightMouseDown) handled = EnumHandling.Handled;
+
+            //handled = EnumHandling.PreventSubsequent;
+
+            Console.WriteLine($"suppress");
+
             return;
         }
         
@@ -186,6 +200,16 @@ public sealed class ActionListener : IDisposable
         if (CallSubscriptions(action))
         {
             handled = EnumHandling.Handled;
+        }
+
+        if (action == EnumEntityAction.LeftMouseDown && handled == EnumHandling.Handled)
+        {
+            _suppressLMB = on;
+        }
+
+        if (action == EnumEntityAction.RightMouseDown && handled == EnumHandling.Handled)
+        {
+            _suppressRMB = on;
         }
     }
     private void OnEntityActionInconsistent(EnumEntityAction action, ref EnumHandling handled)

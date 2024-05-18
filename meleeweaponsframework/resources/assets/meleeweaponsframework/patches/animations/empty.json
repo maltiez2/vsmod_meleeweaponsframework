@@ -45,15 +45,15 @@
     "file": "game:entities/humanoid/player",
     "op": "add",
     "path": "/client/animations/-",
-    "value": {"code": "meleeweaponsframework-empty-legs", "animation": "meleeweaponsframework-empty-legs", "animationSpeed": 1, "blendMode": "Add"}
+    "value": {"code": "meleeweaponsframework-empty-tp-hands", "animation": "meleeweaponsframework-empty-tp-hands", "animationSpeed": 1, "blendMode": "Add"}
   },
   {
     "file": "game:shapes/entity/humanoid/seraph-faceless",
     "op": "add",
     "path": "/animations/-",
     "value": {
-      "name": "meleeweaponsframework-empty-legs",
-      "code": "meleeweaponsframework-empty-legs",
+      "name": "meleeweaponsframework-empty-tp-hands",
+      "code": "meleeweaponsframework-empty-tp-hands",
       "easeInSpeed": 1,
       "easeOutSpeed": 1,
       "quantityframes": 1,
@@ -66,15 +66,15 @@
     "file": "game:entities/humanoid/player",
     "op": "add",
     "path": "/client/animations/-",
-    "value": {"code": "meleeweaponsframework-empty-legs-fp", "animation": "meleeweaponsframework-empty-legs-fp", "animationSpeed": 16, "blendMode": "Average"}
+    "value": {"code": "meleeweaponsframework-empty-fp-hands", "animation": "meleeweaponsframework-empty-fp-hands", "animationSpeed": 16, "blendMode": "Average"}
   },
   {
     "file": "game:shapes/entity/humanoid/seraph-faceless",
     "op": "add",
     "path": "/animations/-",
     "value": {
-      "name": "meleeweaponsframework-empty-legs-fp",
-      "code": "meleeweaponsframework-empty-legs-fp",
+      "name": "meleeweaponsframework-empty-fp-hands",
+      "code": "meleeweaponsframework-empty-fp-hands",
       "easeInSpeed": 1,
       "easeOutSpeed": 1,
       "quantityframes": 1,
@@ -87,15 +87,15 @@
     "file": "game:entities/humanoid/player",
     "op": "add",
     "path": "/client/animations/-",
-    "value": {"code": "meleeweaponsframework-empty-hands", "animation": "meleeweaponsframework-empty-hands", "animationSpeed": 1, "blendMode": "Add"}
+    "value": {"code": "meleeweaponsframework-empty-tp-legs", "animation": "meleeweaponsframework-empty-tp-legs", "animationSpeed": 1, "blendMode": "Add"}
   },
   {
     "file": "game:shapes/entity/humanoid/seraph-faceless",
     "op": "add",
     "path": "/animations/-",
     "value": {
-      "name": "meleeweaponsframework-empty-hands",
-      "code": "meleeweaponsframework-empty-hands",
+      "name": "meleeweaponsframework-empty-tp-legs",
+      "code": "meleeweaponsframework-empty-tp-legs",
       "easeInSpeed": 1,
       "easeOutSpeed": 1,
       "quantityframes": 1,
@@ -108,15 +108,15 @@
     "file": "game:entities/humanoid/player",
     "op": "add",
     "path": "/client/animations/-",
-    "value": {"code": "meleeweaponsframework-empty-hands-fp", "animation": "meleeweaponsframework-empty-hands-fp", "animationSpeed": 16, "blendMode": "Average"}
+    "value": {"code": "meleeweaponsframework-empty-fp-legs", "animation": "meleeweaponsframework-empty-fp-legs", "animationSpeed": 16, "blendMode": "Average"}
   },
   {
     "file": "game:shapes/entity/humanoid/seraph-faceless",
     "op": "add",
     "path": "/animations/-",
     "value": {
-      "name": "meleeweaponsframework-empty-hands-fp",
-      "code": "meleeweaponsframework-empty-hands-fp",
+      "name": "meleeweaponsframework-empty-fp-legs",
+      "code": "meleeweaponsframework-empty-fp-legs",
       "easeInSpeed": 1,
       "easeOutSpeed": 1,
       "quantityframes": 1,
