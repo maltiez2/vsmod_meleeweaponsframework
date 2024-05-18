@@ -1,6 +1,6 @@
 {
   "code": "sword-training",
-  "class": "meleeweaponsframework:directional-weapon",
+  "class": "meleeweaponsframework:training-sword",
   "tool": "sword",
   "attributes": {
     "melee-weapon-stats": {
@@ -12,12 +12,13 @@
       "DirectionsConfigurationTwoHanded": "TopBottom",
       "VanillaAnimationsNaming": true,
       "CanChangeGrip": true,
+      "DebugCollider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
       "AttacksOneHanded": {
         "Top": {
           "Animation": "meleeweaponsframework-training-1h-top",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
+          "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
@@ -29,7 +30,7 @@
           "Animation": "meleeweaponsframework-training-1h-left",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
+          "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
@@ -41,7 +42,7 @@
           "Animation": "meleeweaponsframework-training-1h-right",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
+          "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
@@ -55,7 +56,7 @@
           "Animation": "meleeweaponsframework-training-2h-strike",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
+          "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
@@ -67,7 +68,7 @@
           "Animation": "meleeweaponsframework-training-2h-thrust",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
-          "Collider": [ 0.2, 0, 0.5, 1.3, 0, 0.1 ],
+          "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,

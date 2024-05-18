@@ -19,7 +19,7 @@ public readonly struct PlayerAnimationData : IPlayerAnimationData
     public readonly AnimationId FpLegs;
 
     public const float DefaultHandsCategoryWeight = 512f;
-    public const float DefaultLegsCategoryWeight = 8f;
+    public const float DefaultLegsCategoryWeight = 1f;
 
     /// <summary>
     /// Registers animations for player model and stores ids for future use.
@@ -38,8 +38,8 @@ public readonly struct PlayerAnimationData : IPlayerAnimationData
 
         TpHands = new("MeleeWeaponsFramework:TpHands" + categorySuffix, tpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
         FpHands = new("MeleeWeaponsFramework:FpHands" + categorySuffix, fpHandsCode, EnumAnimationBlendMode.Average, DefaultHandsCategoryWeight);
-        TpLegs = new("MeleeWeaponsFramework:TpLegs", tpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
-        FpLegs = new("MeleeWeaponsFramework:FpLegs", fpLegsCode, EnumAnimationBlendMode.Average, DefaultLegsCategoryWeight);
+        TpLegs = new("MeleeWeaponsFramework:TpLegs", tpLegsCode, EnumAnimationBlendMode.AddAverage, DefaultLegsCategoryWeight);
+        FpLegs = new("MeleeWeaponsFramework:FpLegs", fpLegsCode, EnumAnimationBlendMode.AddAverage, DefaultLegsCategoryWeight);
 
         AnimationData tpHandsData = AnimationData.Player(tpHandsCode);
         AnimationData fpHandsData = AnimationData.Player(fpHandsCode);

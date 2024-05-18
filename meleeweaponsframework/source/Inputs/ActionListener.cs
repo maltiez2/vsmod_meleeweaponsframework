@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.Client;
+﻿using System;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace MeleeWeaponsFramework;
@@ -81,11 +82,16 @@ public sealed class ActionListener : IDisposable
     /// Time before action is considered to be in <see cref="ActionState.Hold"/> state
     /// </summary>
     public TimeSpan HoldDuration { get; set; } = TimeSpan.FromSeconds(0.5);
+    public bool SuppressLMB { get; set; } = false;
+    public bool SuppressRMB { get; set; } = false;
 
     public ActionListener(ICoreClientAPI api)
     {
         _clientApi = api;
         api.Input.InWorldAction += OnEntityAction;
+        api.World.RegisterGameTickListener(dt => TickListener(), 1000 / 30);
+        api.Event.MouseDown += ev => HandleMouseEvents(ev, true);
+        api.Event.MouseUp += ev => HandleMouseEvents(ev, false);
 
         foreach (EnumEntityAction action in Enum.GetValues<EnumEntityAction>())
         {
@@ -164,22 +170,94 @@ public sealed class ActionListener : IDisposable
     private bool _suppressLMB = false;
     private bool _suppressRMB = false;
 
+
+    private void HandleMouseEvents(MouseEvent mouseEvent, bool on)
+    {
+        if (!_clientApi.Input.MouseGrabbed)
+        {
+            on = false;
+            _suppressLMB = false;
+            _suppressRMB = false;
+        }
+        
+        switch (mouseEvent.Button)
+        {
+            case EnumMouseButton.Left:
+                
+                OnEntityAction(EnumEntityAction.LeftMouseDown, on, mouseEvent);
+                if (on && mouseEvent.Handled) _suppressLMB = true;
+                if (!on) _suppressLMB = false;
+                if (on && (_suppressLMB || SuppressLMB)) mouseEvent.Handled = true;
+                
+                break;
+            case EnumMouseButton.Right:
+                
+                OnEntityAction(EnumEntityAction.RightMouseDown, on, mouseEvent);
+                if (on && mouseEvent.Handled) _suppressRMB = true;
+                if (!on) _suppressRMB = false;
+                if (on && (_suppressRMB || SuppressRMB)) mouseEvent.Handled = true;
+                
+                break;
+            default:
+                break;
+        }
+    }
+    private void TickListener()
+    {
+        if (_clientApi.Input.MouseButton.Left)
+        {
+            _actionStates[EnumEntityAction.LeftMouseDown] = SwitchState(EnumEntityAction.LeftMouseDown, true);
+            CallSubscriptions(EnumEntityAction.LeftMouseDown);
+        }
+
+        if (_clientApi.Input.MouseButton.Right)
+        {
+            _actionStates[EnumEntityAction.RightMouseDown] = SwitchState(EnumEntityAction.RightMouseDown, true);
+            CallSubscriptions(EnumEntityAction.RightMouseDown);
+        }
+    }
+
+    private void OnEntityAction(EnumEntityAction action, bool on, MouseEvent mouseEvent)
+    {
+        _actionStates[action] = SwitchState(action, on);
+
+        switch (_actionStates[action])
+        {
+            case ActionState.Pressed:
+                _clientApi.World.RegisterCallback(_ => OnHoldTimer(action), (int)HoldDuration.TotalMilliseconds);
+                break;
+            case ActionState.Released:
+            case ActionState.Inactive:
+                _clientApi.World.UnregisterCallback(_timers[action]);
+                break;
+        }
+
+        if (CallSubscriptions(action) && on)
+        {
+            mouseEvent.Handled = true;
+        }
+    }
     private void OnEntityAction(EnumEntityAction action, bool on, ref EnumHandling handled)
     {
-        Console.WriteLine($"{action} - {on} - {_suppressLMB}");
-
-        //if (_suppressLMB && action == EnumEntityAction.LeftMouseDown) handled = EnumHandling.Handled;
+        if (
+            action == EnumEntityAction.LeftMouseDown ||
+            action == EnumEntityAction.RightMouseDown ||
+            action == EnumEntityAction.InWorldLeftMouseDown ||
+            action == EnumEntityAction.InWorldRightMouseDown
+            )
+        {
+            return;
+        }
 
         if (_tyronDecidedToMakeThisActionsInconsistent_ThanksTyron.Contains(action))
         {
             OnEntityActionInconsistent(action, ref handled);
 
-            if (_suppressLMB && action == EnumEntityAction.InWorldLeftMouseDown) handled = EnumHandling.Handled;
-            if (_suppressRMB && action == EnumEntityAction.InWorldRightMouseDown) handled = EnumHandling.Handled;
+            /*if (handled == EnumHandling.Handled && action == EnumEntityAction.InWorldLeftMouseDown) _suppressLMB = true;
+            if (handled == EnumHandling.Handled && action == EnumEntityAction.InWorldRightMouseDown) _suppressRMB = true;
 
-            //handled = EnumHandling.PreventSubsequent;
-
-            Console.WriteLine($"suppress");
+            if (_suppressLMB && (action == EnumEntityAction.LeftMouseDown || action == EnumEntityAction.InWorldLeftMouseDown)) handled = EnumHandling.Handled;
+            if (_suppressRMB && (action == EnumEntityAction.RightMouseDown || action == EnumEntityAction.InWorldRightMouseDown)) handled = EnumHandling.Handled;*/
 
             return;
         }
@@ -202,15 +280,11 @@ public sealed class ActionListener : IDisposable
             handled = EnumHandling.Handled;
         }
 
-        if (action == EnumEntityAction.LeftMouseDown && handled == EnumHandling.Handled)
-        {
-            _suppressLMB = on;
-        }
+        /*if (handled == EnumHandling.Handled && action == EnumEntityAction.LeftMouseDown) _suppressLMB = true;
+        if (handled == EnumHandling.Handled && action == EnumEntityAction.RightMouseDown) _suppressRMB = true;
 
-        if (action == EnumEntityAction.RightMouseDown && handled == EnumHandling.Handled)
-        {
-            _suppressRMB = on;
-        }
+        if (_suppressLMB && (action == EnumEntityAction.LeftMouseDown || action == EnumEntityAction.InWorldLeftMouseDown)) handled = EnumHandling.Handled;
+        if (_suppressRMB && (action == EnumEntityAction.RightMouseDown || action == EnumEntityAction.InWorldRightMouseDown)) handled = EnumHandling.Handled;*/
     }
     private void OnEntityActionInconsistent(EnumEntityAction action, ref EnumHandling handled)
     {

@@ -70,8 +70,8 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
 
         IdleAnimation = new PlayerSimpleAnimationData(Parameters.IdleAnimation, animationSystem);
         ReadyAnimation = new PlayerSimpleAnimationData(Parameters.ReadyAnimation, animationSystem);
-        IdleAnimationOffhand = new PlayerSimpleAnimationData(Parameters.IdleAnimationOffhand, animationSystem);
-        ReadyAnimationOffhand = new PlayerSimpleAnimationData(Parameters.ReadyAnimationOffhand, animationSystem);
+        IdleAnimationOffhand = new PlayerSimpleAnimationData(Parameters.IdleAnimationOffhand, animationSystem, mainHand: false);
+        ReadyAnimationOffhand = new PlayerSimpleAnimationData(Parameters.ReadyAnimationOffhand, animationSystem, mainHand: false);
         DirectionsType = Enum.Parse<DirectionsConfiguration>(Parameters.DirectionsConfiguration);
     }
 
@@ -133,26 +133,19 @@ public abstract class MeleeShieldItem : ItemShield, IMeleeWeaponItem
 
         IdleAnimation = new PlayerAnimationData(Parameters.IdleAnimation, animationSystem);
         ReadyAnimation = new PlayerAnimationData(Parameters.ReadyAnimation, animationSystem);
-        IdleAnimationOffhand = new PlayerAnimationData(Parameters.IdleAnimationOffhand, animationSystem);
-        ReadyAnimationOffhand = new PlayerAnimationData(Parameters.ReadyAnimationOffhand, animationSystem);
+        IdleAnimationOffhand = new PlayerAnimationData(Parameters.IdleAnimationOffhand, animationSystem, mainHand: false);
+        ReadyAnimationOffhand = new PlayerAnimationData(Parameters.ReadyAnimationOffhand, animationSystem, mainHand: false);
         DirectionsType = Enum.Parse<DirectionsConfiguration>(Parameters.DirectionsConfiguration);
     }
-    public override void OnHeldIdle(ItemSlot slot, EntityAgent byEntity)
-    {
-
-    }
-
 
     public virtual void OnSelected(ItemSlot slot, EntityPlayer player)
     {
 
     }
-
     public virtual void OnDeselected(EntityPlayer player)
     {
 
     }
-
     public virtual void OnRegistered(MeleeWeaponPlayerBehavior behavior, ICoreClientAPI api)
     {
         Behavior = behavior;

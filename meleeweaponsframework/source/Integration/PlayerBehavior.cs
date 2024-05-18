@@ -15,10 +15,12 @@ public enum MeleeWeaponState
     Cooldown = 2
 }
 
-public class MeleeWeaponPlayerBehavior : EntityBehavior
+public sealed class MeleeWeaponPlayerBehavior : EntityBehavior
 {
     public TimeSpan AnimationsEaseOutTime { get; set; } = TimeSpan.FromMilliseconds(500);
     public TimeSpan DefaultIdleAnimationDelay { get; set; } = TimeSpan.FromSeconds(5);
+    public bool SuppressLMB { get; set; } = false;
+    public bool SuppressRMB { get; set; } = false;
 
     public delegate bool ActionEventCallbackDelegate(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction);
 
@@ -63,6 +65,8 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         SetRenderDirectionCursorForMainHand();
         _directionController.OnGameTick();
         _ = CheckIfItemsInHandsChanged();
+        _actionListener.SuppressLMB = SuppressLMB;
+        _actionListener.SuppressRMB = SuppressRMB;
     }
 
     /// <summary>
@@ -145,7 +149,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         {
             _currentMainHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
 
-            ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
+            ItemStack? stack = _player.RightHandItemSlot.Itemstack;
             if (stack == null || stack.Item is not IMeleeWeaponItem weapon) return;
             weapon.ReadyAnimation.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }
@@ -153,7 +157,7 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         {
             _currentOffHandAnimation.Stop(entity, _animationSystem, AnimationsEaseOutTime);
 
-            ItemStack? stack = _player.ActiveHandItemSlot.Itemstack;
+            ItemStack? stack = _player.LeftHandItemSlot.Itemstack;
             if (stack == null || stack.Item is not IMeleeWeaponItem weapon) return;
             weapon.ReadyAnimationOffhand.Start(entity, _animationSystem, AnimationsEaseOutTime);
         }
@@ -289,6 +293,12 @@ public class MeleeWeaponPlayerBehavior : EntityBehavior
         int mainHandId = _player.ActiveHandItemSlot.Itemstack?.Id ?? -1;
         int offHandId = _player.LeftHandItemSlot.Itemstack?.Id ?? -1;
         bool anyChanged = mainHandId != _currentMainHandItemId || offHandId != _currentOffHandItemId;
+
+        if (anyChanged)
+        {
+            SuppressLMB = false;
+            SuppressRMB = false;
+        }
 
         if (anyChanged && _currentMainHandItemId != mainHandId)
         {

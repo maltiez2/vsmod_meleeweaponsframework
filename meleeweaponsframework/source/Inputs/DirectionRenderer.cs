@@ -43,6 +43,8 @@ public sealed class DirectionCursorRenderer : IRenderer
     {
         if (!Show) return;
 
+        if (!_clientApi.Input.MouseGrabbed) return;
+
 
         LoadedTexture texture = _directionCursorTextures[_currentDirection];
 

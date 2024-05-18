@@ -82,7 +82,7 @@ public class GenericShield : MeleeShieldItem
     protected RunParameters[] EaseOutAnimationParameters { get; private set; } = Array.Empty<RunParameters>();
     protected long CooldownTimer { get; set; } = 0;
 
-    [ActionEventHandler(EnumEntityAction.InWorldRightMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Active)]
     protected virtual bool OnBlock(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (AltPressed() || mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;

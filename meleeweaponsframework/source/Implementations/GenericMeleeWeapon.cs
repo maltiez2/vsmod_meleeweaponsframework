@@ -122,7 +122,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     protected long CooldownCallback = 0;
     protected const float EaseOutAnimationFactor = 2.0f;
 
-    [ActionEventHandler(EnumEntityAction.InWorldLeftMouseDown, ActionState.Pressed)]
+    [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Active)]
     protected virtual bool OnAttack(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (AltPressed() || !mainHand || state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) == MeleeWeaponState.Active) return false;
