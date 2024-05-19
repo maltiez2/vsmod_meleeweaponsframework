@@ -42,14 +42,14 @@ public class GenericShield : MeleeShieldItem
 
         MeleeBlock block = new()
         {
-            PerfectBlockWindow = TimeSpan.FromMilliseconds(GenericParameters.PerfectBlockWindowMs),
+            ParryWindow = TimeSpan.FromMilliseconds(GenericParameters.PerfectBlockWindowMs),
             Coverage = DirectionConstrain.FromDegrees(GenericParameters.CoverageDegrees),
             Directions = new() { new BlockDirections() },
-            DirectionlessPerfectBlock = true,
+            DirectionlessParry = true,
             DamageReduction = GenericParameters.DamageMultiplier,
 
             BlockSound = GenericParameters.BlockSound != null ? new AssetLocation(GenericParameters.BlockSound) : null,
-            PerfectBlockSound = GenericParameters.PerfectBlockSound != null ? new AssetLocation(GenericParameters.PerfectBlockSound) : null,
+            ParrySound = GenericParameters.PerfectBlockSound != null ? new AssetLocation(GenericParameters.PerfectBlockSound) : null,
             CancelSound = GenericParameters.CancelBlockSound != null ? new AssetLocation(GenericParameters.CancelBlockSound) : null
         };
 

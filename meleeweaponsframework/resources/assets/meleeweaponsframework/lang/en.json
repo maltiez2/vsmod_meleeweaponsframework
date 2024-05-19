@@ -1,5 +1,6 @@
 {
     "item-sword-training": "Training sword",
+    "itemdesc-sword-training": "Controls:<br/>  change grip: Ctrl + RMB<br/>  move mouse to select attack direction<br/><br/>Does not deal any damage to targets, meant to be used for for sparrings.",
   
     "vanilla-spears-patch": "Vanilla spears",
     "vanilla-swords-patch": "Vanilla swords",

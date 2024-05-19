@@ -2,6 +2,7 @@
 using AnimationManagerLib.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
 namespace MeleeWeaponsFramework;
@@ -21,6 +22,7 @@ public class DirectionalWeaponParameters
 
     public float MaxReach { get; set; } = 6.0f;
     public float[] DebugCollider { get; set; } = new float[6];
+    public float[] DebugParryCollider { get; set; } = new float[12];
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksOneHanded { get; set; } = new();
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksTwoHanded { get; set; } = new();
 
@@ -40,6 +42,9 @@ public class DirectionalWeaponParameters
     public float CoverageDegreesTwoHanded { get; set; } = 120;
     public float DamageMultiplierOneHanded { get; set; } = 0.5f;
     public float DamageMultiplierTwoHanded { get; set; } = 0.5f;
+    public float[][] OneHandedParriesColliders { get; set; } = Array.Empty<float[]>();
+    public float[][] TwoHandedParriesColliders { get; set; } = Array.Empty<float[]>();
+
     public Dictionary<string, DirectionalWeaponParryStats> ParriesOnHanded { get; set; } = new();
     public Dictionary<string, DirectionalWeaponParryStats> ParriesTwoHanded { get; set; } = new();
 }
@@ -69,7 +74,6 @@ public class DirectionalWeaponParryStats
     public WeaponAnimationParameters[] EaseInAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
     public WeaponAnimationParameters[] EaseOutAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
-
 
 public class WeaponAnimationParameters
 {
@@ -106,7 +110,7 @@ public enum GripType
     TwoHanded
 }
 
-public class DirectionalWeapon : Item, IMeleeWeaponItem
+public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 {
     public int WeaponItemId => ItemId;
     public virtual IPlayerAnimationData IdleAnimation => Grip == GripType.OneHanded ? IdleOneHandedAnimation : IdleTwoHandedAnimation;
@@ -115,6 +119,9 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     public virtual IPlayerAnimationData ReadyAnimationOffhand => ReadyOffhandAnimation;
     public virtual DirectionsConfiguration DirectionsType => Grip == GripType.OneHanded ? DirectionsConfigurationOneHanded : DirectionsConfigurationTwoHanded;
     public virtual bool RenderDirectionCursor { get; protected set; } = true;
+
+    public IEnumerable<IParryCollider> RelativeColliders { get; protected set; } = Array.Empty<IParryCollider>();
+    public IEnumerable<IParryCollider> InWorldColliders { get; set; } = Array.Empty<IParryCollider>();
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -142,6 +149,8 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         RegisterParries();
         
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
+        DebugParryCollider = new(DirectionalWeaponParameters.DebugParryCollider);
+
     }
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
     {
@@ -219,6 +228,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         if (Api != null)
         {
             DebugCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
+            DebugParryCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity, ColorUtil.ToRgba(255, 255, 0, 0));
         }
 #endif
     }
@@ -249,6 +259,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected DirectionsConfiguration DirectionsConfigurationTwoHanded { get; set; } = DirectionsConfiguration.None;
 
     protected LineSegmentCollider DebugCollider { get; set; }
+    protected RectangularCollider DebugParryCollider { get; set; }
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
@@ -262,6 +273,7 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
     protected Dictionary<AttackDirection, AttackId> AttacksTwoHanded { get; set; } = new();
     protected MeleeBlockId BlockIdOneHanded { get; set; } = new(0, 0);
     protected MeleeBlockId BlockIdTwoHanded { get; set; } = new(0, 1);
+    protected Dictionary<GripType, IEnumerable<IParryCollider>> ParryCollidersByGrip = new();
     protected DirectionalWeaponParameters DirectionalWeaponParameters { get; private set; } = new();
     protected long CooldownTimer { get; set; } = 0;
     protected GripType DefaultGrip { get; set; } = GripType.OneHanded;
@@ -489,6 +501,9 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
         MeleeBlock blockOneHanded = ParseBlocksFromStatsOneHanded(DirectionalWeaponParameters);
         MeleeBlock blockTwoHanded = ParseBlocksFromStatsTwoHanded(DirectionalWeaponParameters);
 
+        ParryCollidersByGrip[GripType.OneHanded] = DirectionalWeaponParameters.OneHandedParriesColliders.Select(collider => new RectangularCollider(collider)).OfType<IParryCollider>();
+        ParryCollidersByGrip[GripType.TwoHanded] = DirectionalWeaponParameters.TwoHandedParriesColliders.Select(collider => new RectangularCollider(collider)).OfType<IParryCollider>();
+
         BlockIdOneHanded = new(WeaponItemId, 0);
         BlockIdTwoHanded = new(WeaponItemId, 1);
 
@@ -552,12 +567,12 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         return new()
         {
-            PerfectBlockWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowOneHandedMs),
+            ParryWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowOneHandedMs),
             Coverage = DirectionConstrain.FromDegrees(stats.CoverageDegreesOneHanded),
-            DirectionlessPerfectBlock = stats.DirectionlessPerfectBlockOneHanded,
+            DirectionlessParry = stats.DirectionlessPerfectBlockOneHanded,
             DamageReduction = stats.DamageMultiplierOneHanded,
             BlockSound = stats.BlockSound != null ? new AssetLocation(stats.BlockSound) : null,
-            PerfectBlockSound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
+            ParrySound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
             CancelSound = stats.CancelBlockSound != null ? new AssetLocation(stats.CancelBlockSound) : null,
             Directions = directions
         };
@@ -585,12 +600,12 @@ public class DirectionalWeapon : Item, IMeleeWeaponItem
 
         return new()
         {
-            PerfectBlockWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowTwoHandedMs),
+            ParryWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowTwoHandedMs),
             Coverage = DirectionConstrain.FromDegrees(stats.CoverageDegreesTwoHanded),
-            DirectionlessPerfectBlock = stats.DirectionlessPerfectBlockTwoHanded,
+            DirectionlessParry = stats.DirectionlessPerfectBlockTwoHanded,
             DamageReduction = stats.DamageMultiplierTwoHanded,
             BlockSound = stats.BlockSound != null ? new AssetLocation(stats.BlockSound) : null,
-            PerfectBlockSound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
+            ParrySound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
             CancelSound = stats.CancelBlockSound != null ? new AssetLocation(stats.CancelBlockSound) : null,
             Directions = directions
         };

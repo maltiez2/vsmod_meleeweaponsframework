@@ -140,7 +140,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
     {
         if (EntityHitParticles != null)
         {
-            foreach ((_, Vector3 point) in result.Entities)
+            foreach ((_, Vector3 point, _) in result.Entities)
             {
                 EntityHitParticles.basePos.X = point.X;
                 EntityHitParticles.basePos.Y = point.Y;

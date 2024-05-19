@@ -25,7 +25,7 @@ public class TrainingSword : DirectionalWeapon
     {
         base.OnAttackCallback(result, slot, direction, mainHand);
 
-        foreach ((Entity entity, Vector3 point) in result.Entities.Where(element => !_entitiesHit.Contains(element.entity.EntityId)))
+        foreach ((Entity entity, Vector3 point, _) in result.Entities.Where(element => !_entitiesHit.Contains(element.entity.EntityId)))
         {
             Api?.World.PlaySoundAt(_hitSound, Api.World.Player.Entity);
             _entitiesHit.Add(entity.EntityId);

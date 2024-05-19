@@ -1,12 +1,11 @@
 ﻿using CompactExifLib;
-using System;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.Numerics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
 
 namespace MeleeWeaponsFramework;
 
@@ -16,16 +15,18 @@ public enum AttackResultFlag
     None = 0,
     HitEntity = 1,
     HitTerrain = 2,
-    Finished = 4
+    Finished = 4,
+    Blocked = 8,
+    Parried = 16
 }
 
 public readonly struct AttackResult
 {
     public readonly AttackResultFlag Result;
     public readonly IEnumerable<(Block block, Vector3 point)> Terrain = Array.Empty<(Block block, Vector3 point)>();
-    public readonly IEnumerable<(Entity entity, Vector3 point)> Entities = Array.Empty<(Entity entity, Vector3 point)>();
+    public readonly IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)> Entities = Array.Empty<(Entity entity, Vector3 point, AttackResultFlag hitType)>();
 
-    public AttackResult(AttackResultFlag result = AttackResultFlag.None, IEnumerable<(Block block, Vector3 point)>? terrain = null, IEnumerable<(Entity entity, Vector3 point)>? entities = null)
+    public AttackResult(AttackResultFlag result = AttackResultFlag.None, IEnumerable<(Block block, Vector3 point)>? terrain = null, IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)>? entities = null)
     {
         Result = result;
         if (terrain != null) Terrain = terrain;
@@ -50,6 +51,8 @@ public sealed class MeleeAttack
 
     public bool StopOnTerrainHit { get; set; } = true;
     public bool StopOnEntityHit { get; set; } = false;
+    public bool StopOnParry { get; set; } = true;
+    public bool StopOnBlock { get; set; } = true;
     public bool CollideWithTerrain { get; set; } = true;
 
     public MeleeAttack(int id, int itemId, ICoreClientAPI api, TimeSpan duration, IEnumerable<MeleeAttackDamageType> damageTypes, float maxReach)
@@ -119,7 +122,7 @@ public sealed class MeleeAttack
 
         _damagePackets.Clear();
 
-        IEnumerable<(Entity entity, Vector3 point)> entitiesCollisions = CollideWithEntities(progress, player, _damagePackets, slot);
+        IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)> entitiesCollisions = CollideWithEntities(progress, player, _damagePackets, slot);
 
         if (entitiesCollisions.Any())
         {
@@ -145,7 +148,7 @@ public sealed class MeleeAttack
     private readonly Dictionary<long, HashSet<long>> _attackedEntities = new();
     private readonly List<MeleeAttackDamagePacket> _damagePackets = new();
     private readonly HashSet<(Block block, Vector3 point)> _terrainCollisionsBuffer = new();
-    private readonly HashSet<(Entity entity, Vector3 point)> _entitiesCollisionsBuffer = new();
+    private readonly HashSet<(Entity entity, Vector3 point, AttackResultFlag hitType)> _entitiesCollisionsBuffer = new();
     private AttackDirection _direction = AttackDirection.Top;
 
     private IEnumerable<(Block block, Vector3 point)> CheckTerrainCollision(float progress)
@@ -165,24 +168,55 @@ public sealed class MeleeAttack
 
         return _terrainCollisionsBuffer.ToImmutableHashSet();
     }
-    private IEnumerable<(Entity entity, Vector3 point)> CollideWithEntities(float progress, IPlayer player, List<MeleeAttackDamagePacket> packets, ItemSlot slot)
+    private IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)> CollideWithEntities(float progress, IPlayer player, List<MeleeAttackDamagePacket> packets, ItemSlot slot)
     {
         long entityId = player.Entity.EntityId;
 
         Entity[] entities = _api.World.GetEntitiesAround(player.Entity.Pos.XYZ, MaxReach, MaxReach);
 
         _entitiesCollisionsBuffer.Clear();
+
+        foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X <= progress && item.HitWindow.Y >= progress))
+        {
+            bool stop = false;
+            
+            foreach (EntityAgent entity in entities
+                    .Where(entity => entity != player.Entity)
+                    .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
+                    .OfType<EntityAgent>()
+                    )
+            {
+                MeleeBlockBehavior? blockBehavior = entity.GetBehavior<MeleeBlockBehavior>();
+                if (blockBehavior == null || (!blockBehavior.IsParrying() && !blockBehavior.IsBlocking())) continue;
+
+                Vector3? intersection = CollideWithMeleeBlock(blockBehavior, damageType);
+
+                if (intersection == null) continue;
+
+                if (blockBehavior.IsParrying() && StopOnParry) return new (Entity entity, Vector3 point, AttackResultFlag hitType)[] { (entity, intersection.Value, AttackResultFlag.Parried) };
+                if (blockBehavior.IsBlocking() && StopOnBlock) return new (Entity entity, Vector3 point, AttackResultFlag hitType)[] { (entity, intersection.Value, AttackResultFlag.Blocked) };
+
+                if (blockBehavior.IsParrying()) _entitiesCollisionsBuffer.Add((entity, intersection.Value, AttackResultFlag.Parried));
+                if (blockBehavior.IsBlocking()) _entitiesCollisionsBuffer.Add((entity, intersection.Value, AttackResultFlag.Blocked));
+            }
+
+            if (stop) break;
+        }
+
         foreach (MeleeAttackDamageType damageType in DamageTypes.Where(item => item.HitWindow.X <= progress && item.HitWindow.Y >= progress))
         {
             int collider = -1;
-            foreach ((Entity entity, Vector3? point) in entities
+            foreach (Entity entity in entities
                     .Where(entity => entity != player.Entity)
-                    .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId))
-                    .Select(entity => (entity, damageType.TryAttack(player, entity, _direction, out collider))))
+                    .Where(entity => !_attackedEntities[entityId].Contains(entity.EntityId)))
             {
+                Vector3? point = damageType.TryAttack(player, entity, _direction, out collider);
+
                 if (point == null) continue;
                 packets.Add(new MeleeAttackDamagePacket() { Id = damageType.Id, Position = new float[] { point.Value.X, point.Value.Y, point.Value.Z }, AttackerEntityId = player.Entity.EntityId, TargetEntityId = entity.EntityId, Collider = collider });
-                _entitiesCollisionsBuffer.Add((entity, point.Value));
+                
+                _entitiesCollisionsBuffer.Add((entity, point.Value, AttackResultFlag.HitEntity));
+                
                 if (damageType.DurabilityDamage > 0)
                 {
                     slot.Itemstack.Collectible.DamageItem(_api.World, player.Entity, slot, damageType.DurabilityDamage);
@@ -191,8 +225,27 @@ public sealed class MeleeAttack
             }
         }
 
-        IEnumerable<(Entity entity, Vector3 point)> result = _entitiesCollisionsBuffer.ToImmutableHashSet();
+        IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)> result = _entitiesCollisionsBuffer.ToImmutableHashSet();
         _entitiesCollisionsBuffer.Clear();
         return result;
+    }
+
+    private static Vector3? CollideWithMeleeBlock(MeleeBlockBehavior blockBehavior, MeleeAttackDamageType damageType)
+    {
+        IEnumerable<IParryCollider> colliders = blockBehavior.GetColliders();
+        float closestParameter = float.MaxValue;
+        Vector3 closestIntersection = Vector3.Zero;
+        bool intersected = false;
+        foreach (IParryCollider parryCollider in colliders)
+        {
+            if (parryCollider.IntersectSegment(damageType.InWorldCollider, out float parameter, out Vector3 intersection) && parameter < closestParameter)
+            {
+                closestParameter = parameter;
+                closestIntersection = intersection;
+                intersected = true;
+            }
+        }
+
+        return intersected ? closestIntersection : null;
     }
 }

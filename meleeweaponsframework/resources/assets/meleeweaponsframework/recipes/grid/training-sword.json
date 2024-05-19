@@ -1,0 +1,13 @@
+[
+  {
+    "ingredientPattern": "NPL",
+    "ingredients": {
+      "P": {"type": "block", "code": "game:plank-*", "quantity": 2},
+      "L": { "type": "item", "code": "game:flaxtwine", "quantity": 1},
+      "N": { "type": "item", "code": "game:knife-*", "isTool": true }
+    },
+    "width": 3,
+    "height": 1,
+    "output": {"type": "item", "code": "meleeweaponsframework:sword-training"}
+  }
+]

@@ -204,6 +204,8 @@ public sealed class ActionListener : IDisposable
     }
     private void TickListener()
     {
+        if (!_clientApi.Input.MouseGrabbed) return;
+
         if (_clientApi.Input.MouseButton.Left)
         {
             _actionStates[EnumEntityAction.LeftMouseDown] = SwitchState(EnumEntityAction.LeftMouseDown, true);

@@ -13,17 +13,51 @@
       "VanillaAnimationsNaming": true,
       "CanChangeGrip": true,
       "DebugCollider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
+      "DebugParryCollider": [
+          0.2, 0.3, 0.5,
+          0.2, -0.3, 0.5,
+          3.3, -0.3, 0.5,
+          3.3, 0.3, 0.5
+      ],
+      "OneHandedParriesColliders": [
+        [
+          0.2, 0.3, 0.5,
+          0.2, -0.3, 0.5,
+          3.3, -0.3, 0.5,
+          3.3, 0.3, 0.5
+        ],
+        [
+          0.2, 0, 0.2,
+          0.2, 0, 0.8,
+          3.3, 0, 0.8,
+          3.3, 0, 0.2
+        ]
+      ],
+      "TwoHandedParriesColliders": [
+        [
+          0.2, 0.3, 0.5,
+          0.2, -0.3, 0.5,
+          3.3, -0.3, 0.5,
+          3.3, 0.3, 0.5
+        ],
+        [
+          0.2, 0, 0.2,
+          0.2, 0, 0.8,
+          3.3, 0, 0.8,
+          3.3, 0, 0.2
+        ]
+      ],
       "AttacksOneHanded": {
         "Top": {
           "Animation": "meleeweaponsframework-training-1h-top",
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
           "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
-          "WindUpMs": 200,
-          "DurationMs": 300,
-          "EaseOutMs": 300,
-          "AttackDamage": 3,
-          "AttackTier": 2,
+          "WindUpMs": 250,
+          "DurationMs": 350,
+          "EaseOutMs": 400,
+          "AttackDamage": 0,
+          "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
         },
         "BottomLeft": {
@@ -31,11 +65,11 @@
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
           "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
-          "WindUpMs": 200,
-          "DurationMs": 300,
-          "EaseOutMs": 300,
-          "AttackDamage": 3,
-          "AttackTier": 2,
+          "WindUpMs": 250,
+          "DurationMs": 350,
+          "EaseOutMs": 400,
+          "AttackDamage": 0,
+          "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
         },
         "BottomRight": {
@@ -43,11 +77,11 @@
           "AnimationWindupFrame": 10,
           "AnimationStrikeFrame": 15,
           "Collider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
-          "WindUpMs": 200,
-          "DurationMs": 300,
-          "EaseOutMs": 300,
-          "AttackDamage": 3,
-          "AttackTier": 2,
+          "WindUpMs": 250,
+          "DurationMs": 350,
+          "EaseOutMs": 400,
+          "AttackDamage": 0,
+          "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
         }
       },
@@ -60,8 +94,8 @@
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
-          "AttackDamage": 5,
-          "AttackTier": 2,
+          "AttackDamage": 0,
+          "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
         },
         "Bottom": {
@@ -72,8 +106,8 @@
           "WindUpMs": 200,
           "DurationMs": 300,
           "EaseOutMs": 300,
-          "AttackDamage": 5,
-          "AttackTier": 2,
+          "AttackDamage": 0,
+          "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
         }
       }
@@ -130,7 +164,7 @@
   },
   "textures": {
   },
-  "durability": 480,
+  "durability": 1250,
   "creativeinventory": {
     "general": [
       "*"

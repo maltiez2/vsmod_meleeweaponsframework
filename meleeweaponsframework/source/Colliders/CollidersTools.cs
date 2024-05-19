@@ -23,7 +23,7 @@ internal static class ColliderTools
 
         return new(_outputBuffer.X, _outputBuffer.Y, _outputBuffer.Z);
     }
-    public static Matrixf? GetHeldItemModelMatrix(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public static Matrixf? GetHeldItemModelMatrix(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         if (entity.Properties.Client.Renderer is not EntityShapeRenderer entityShapeRenderer) return null;
 
@@ -45,7 +45,7 @@ internal static class ColliderTools
             .RotateZ((float)(attachPoint.RotationZ + itemStackRenderInfo.Transform.Rotation.Z) * (MathF.PI / 180f))
             .Translate(0f - itemStackRenderInfo.Transform.Origin.X, 0f - itemStackRenderInfo.Transform.Origin.Y, 0f - itemStackRenderInfo.Transform.Origin.Z);
     }
-    public static bool Transform(IEnumerable<IHasCollider> colliders, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public static bool Transform(IEnumerable<IHasCollider> colliders, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = GetHeldItemModelMatrix(entity, itemSlot, api, right);

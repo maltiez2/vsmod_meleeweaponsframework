@@ -8,8 +8,8 @@ namespace MeleeWeaponsFramework;
 
 public interface ICollider
 {
-    void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = ColorUtil.WhiteArgb);
-    ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true);
+    void Render(ICoreClientAPI api, EntityAgent entityPlayer, int color = ColorUtil.WhiteArgb);
+    ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true);
     ICollider Transform(Matrixf modelMatrix, EntityPos playerPos);
 }
 
@@ -17,6 +17,12 @@ public interface IHasCollider
 {
     ICollider RelativeCollider { get; }
     ICollider InWorldCollider { get; set; }
+}
+
+public interface IHasParryCollider
+{
+    IEnumerable<IParryCollider> RelativeColliders { get; }
+    IEnumerable<IParryCollider> InWorldColliders { get; set; }
 }
 
 

@@ -30,7 +30,7 @@ public readonly struct LineSegmentCollider : IWeaponCollider
         Direction -= Position;
     }
 
-    public void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = ColorUtil.WhiteArgb)
+    public void Render(ICoreClientAPI api, EntityAgent entityPlayer, int color = ColorUtil.WhiteArgb)
     {
         BlockPos playerPos = entityPlayer.Pos.AsBlockPos;
         Vector3 playerPosVector = new(playerPos.X, playerPos.Y, playerPos.Z);
@@ -40,7 +40,7 @@ public readonly struct LineSegmentCollider : IWeaponCollider
 
         api.Render.RenderLine(playerPos, tail.X, tail.Y, tail.Z, head.X, head.Y, head.Z, color);
     }
-    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
@@ -125,7 +125,7 @@ public readonly struct LineSegmentCollider : IWeaponCollider
         return closestIntersection != null ? (closestIntersection.Value.block, closestIntersection.Value.position) : null;
     }
 
-    public static IEnumerable<LineSegmentCollider> Transform(IEnumerable<LineSegmentCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public static IEnumerable<LineSegmentCollider> Transform(IEnumerable<LineSegmentCollider> segments, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
@@ -133,7 +133,7 @@ public readonly struct LineSegmentCollider : IWeaponCollider
 
         return segments.Select(segment => TransformSegment(segment, modelMatrix, playerPos));
     }
-    public static bool Transform(IEnumerable<IHasLineCollider> segments, EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public static bool Transform(IEnumerable<IHasLineCollider> segments, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
@@ -255,8 +255,15 @@ public readonly struct RectangularCollider : IParryCollider
         VertexC = new(vertexC.X, vertexC.Y, vertexC.Z);
         VertexD = new(vertexD.X, vertexD.Y, vertexD.Z);
     }
-
-    public void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = -1)
+    public RectangularCollider(float[] vertices)
+    {
+        VertexA = new(vertices[0], vertices[1], vertices[2]);
+        VertexB = new(vertices[3], vertices[4], vertices[5]);
+        VertexC = new(vertices[6], vertices[7], vertices[8]);
+        VertexD = new(vertices[9], vertices[10], vertices[11]);
+    }
+    
+    public void Render(ICoreClientAPI api, EntityAgent entityPlayer, int color = -1)
     {
         BlockPos playerPos = entityPlayer.Pos.AsBlockPos;
         Vector3 playerPosVector = new(playerPos.X, playerPos.Y, playerPos.Z);
@@ -267,9 +274,9 @@ public readonly struct RectangularCollider : IParryCollider
         Vector3 pointD = VertexD - playerPosVector;
 
         api.Render.RenderLine(playerPos, pointA.X, pointA.Y, pointA.Z, pointB.X, pointB.Y, pointB.Z, color);
-        api.Render.RenderLine(playerPos, pointA.X, pointA.Y, pointA.Z, pointC.X, pointC.Y, pointC.Z, color);
-        api.Render.RenderLine(playerPos, pointC.X, pointC.Y, pointC.Z, pointB.X, pointB.Y, pointB.Z, color);
+        api.Render.RenderLine(playerPos, pointB.X, pointB.Y, pointB.Z, pointC.X, pointC.Y, pointC.Z, color);
         api.Render.RenderLine(playerPos, pointC.X, pointC.Y, pointC.Z, pointD.X, pointD.Y, pointD.Z, color);
+        api.Render.RenderLine(playerPos, pointD.X, pointD.Y, pointD.Z, pointA.X, pointA.Y, pointA.Z, color);
     }
     public bool IntersectSegment(LineSegmentCollider segment, out float parameter, out Vector3 intersection)
     {
@@ -330,7 +337,7 @@ public readonly struct RectangularCollider : IParryCollider
 
         return true;
     }
-    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
@@ -414,8 +421,19 @@ public readonly struct OctagonalCollider : IParryCollider
         VertexG = new(vertexG.X, vertexG.Y, vertexG.Z);
         VertexH = new(vertexH.X, vertexH.Y, vertexH.Z);
     }
+    public OctagonalCollider(float[] vertices)
+    {
+        VertexA = new(vertices[0], vertices[1], vertices[2]);
+        VertexB = new(vertices[3], vertices[4], vertices[5]);
+        VertexC = new(vertices[6], vertices[7], vertices[8]);
+        VertexD = new(vertices[9], vertices[10], vertices[11]);
+        VertexE = new(vertices[12], vertices[13], vertices[14]);
+        VertexF = new(vertices[15], vertices[16], vertices[17]);
+        VertexG = new(vertices[18], vertices[19], vertices[20]);
+        VertexH = new(vertices[21], vertices[22], vertices[23]);
+    }
 
-    public void Render(ICoreClientAPI api, EntityPlayer entityPlayer, int color = -1)
+    public void Render(ICoreClientAPI api, EntityAgent entityPlayer, int color = -1)
     {
         BlockPos playerPos = entityPlayer.Pos.AsBlockPos;
         Vector3 playerPosVector = new(playerPos.X, playerPos.Y, playerPos.Z);
@@ -523,7 +541,7 @@ public readonly struct OctagonalCollider : IParryCollider
 
         return true;
     }
-    public ICollider? Transform(EntityPlayer entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
         EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);

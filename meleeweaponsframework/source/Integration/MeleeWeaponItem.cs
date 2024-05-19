@@ -25,7 +25,7 @@ public class MeleeWeaponParameters
     public string DirectionsConfiguration { get; set; } = "None";
 }
 
-public interface IMeleeWeaponItem
+public interface IBehaviorManagedItem
 {
     public int WeaponItemId { get; }
     IPlayerAnimationData IdleAnimation { get; }
@@ -40,7 +40,7 @@ public interface IMeleeWeaponItem
     void OnRegistered(MeleeWeaponPlayerBehavior behavior, ICoreClientAPI api);
 }
 
-public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
+public abstract class MeleeWeaponItem : Item, IBehaviorManagedItem
 {
     public int WeaponItemId => ItemId;
     public virtual IPlayerAnimationData IdleAnimation { get; protected set; }
@@ -103,7 +103,7 @@ public abstract class MeleeWeaponItem : Item, IMeleeWeaponItem
     protected bool AltPressed() => (Api?.Input.KeyboardKeyState[(int)GlKeys.AltLeft] ?? false) || (Api?.Input.KeyboardKeyState[(int)GlKeys.AltRight] ?? false);
 }
 
-public abstract class MeleeShieldItem : ItemShield, IMeleeWeaponItem
+public abstract class MeleeShieldItem : ItemShield, IBehaviorManagedItem
 {
     public int WeaponItemId => ItemId;
     public virtual IPlayerAnimationData IdleAnimation { get; protected set; }

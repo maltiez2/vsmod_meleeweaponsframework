@@ -115,7 +115,7 @@ public class VanillaSpear : GenericMeleeWeapon
     {
         if ((result.Result & AttackResultFlag.HitEntity) != 0) // Api?.World.Rand.NextDouble() < TyronMagicNumber_1 && 
         {
-            foreach ((Entity entity, _) in result.Entities)
+            foreach ((Entity entity, _, _) in result.Entities)
             {
                 if (HackingSystemClient?.Hack(entity, mainHand) == true)
                 {

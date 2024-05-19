@@ -10,7 +10,7 @@ public class MeleeWeaponsFrameworkModSystem : ModSystem
     public override void Start(ICoreAPI api)
     {
         api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeweapon", typeof(MeleeWeaponPlayerBehavior));
-        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeblock", typeof(MeleeBlockPlayerBehavior));
+        api.RegisterEntityBehaviorClass("meleeweaponsframework:meleeblock", typeof(MeleeBlockBehavior));
         api.RegisterItemClass("meleeweaponsframework:generic-melee-weapon", typeof(GenericMeleeWeapon));
         api.RegisterItemClass("meleeweaponsframework:directional-weapon", typeof(DirectionalWeapon));
         api.RegisterItemClass("meleeweaponsframework:training-sword", typeof(TrainingSword));

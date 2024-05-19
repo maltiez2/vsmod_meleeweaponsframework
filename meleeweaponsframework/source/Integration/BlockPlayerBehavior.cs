@@ -1,4 +1,5 @@
-﻿using Vintagestory.API.Common;
+﻿using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
@@ -6,9 +7,9 @@ using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
-public class MeleeBlockPlayerBehavior : EntityBehavior
+public class MeleeBlockBehavior : EntityBehavior
 {
-    public MeleeBlockPlayerBehavior(Entity entity) : base(entity)
+    public MeleeBlockBehavior(Entity entity) : base(entity)
     {
         CoreApi = entity.Api;
         Name = "FSMlibBlockAgainstDamage";
@@ -28,20 +29,14 @@ public class MeleeBlockPlayerBehavior : EntityBehavior
     public override string PropertyName() => StatCategory;
     public float OnEntityReceiveDamage(float damage, DamageSource damageSource)
     {
-        if (CurrentBlock == null)
-        {
-            return damage;
-        }
-
-        if (damageSource.SourceEntity == null)
-        {
-            return damage;
-        }
+        if (damageSource is ILocationalDamage) return damage;
+        if (CurrentBlock == null) return damage;
+        if (damageSource.SourceEntity == null) return damage;
 
         long currentTime = CoreApi.World.ElapsedMilliseconds;
         if (currentTime - BlockStartTime <= PerfectBlockTime)
         {
-            OnPerfectBlock(damageSource, ref damage, DirectionIndex);
+            OnParry(damageSource, ref damage, DirectionIndex);
         }
         else
         {
@@ -51,19 +46,46 @@ public class MeleeBlockPlayerBehavior : EntityBehavior
         return damage;
     }
 
-    public void Start(MeleeBlock parameters, int directionIndex)
+    public void Start(MeleeBlock parameters, int directionIndex, int itemId, bool rightHand)
     {
         Stop();
         DirectionIndex = directionIndex;
         BlockStartTime = CoreApi.World.ElapsedMilliseconds;
-        PerfectBlockTime = (long)parameters.PerfectBlockWindow.TotalMilliseconds;
+        PerfectBlockTime = (long)parameters.ParryWindow.TotalMilliseconds;
         CurrentBlock = parameters;
+        ItemId = itemId;
+        RightHand = rightHand;
     }
     public void Stop()
     {
         OnCancel();
         CurrentBlock = null;
     }
+
+    public IEnumerable<IParryCollider> GetColliders()
+    {
+        IParryCollider[] empty = Array.Empty<IParryCollider>();
+
+        if (Entity == null || CoreApi is not ICoreClientAPI clientApi) return empty;
+
+        if (RightHand)
+        {
+            if (Entity.RightHandItemSlot.Itemstack?.Item.Id != ItemId) return empty;
+            if (Entity.RightHandItemSlot.Itemstack?.Item is not IHasParryCollider rightHand) return empty;
+
+            return rightHand.RelativeColliders.Select(collider => collider.Transform(Entity, Entity.RightHandItemSlot, clientApi)).OfType<IParryCollider>();
+        }
+        else
+        {
+            if (Entity.LeftHandItemSlot.Itemstack?.Item.Id != ItemId) return empty;
+            if (Entity.LeftHandItemSlot.Itemstack?.Item is not IHasParryCollider leftHand) return empty;
+
+            return leftHand.RelativeColliders.Select(collider => collider.Transform(Entity, Entity.LeftHandItemSlot, clientApi)).OfType<IParryCollider>();
+        }
+    }
+
+    public bool IsBlocking() => CurrentBlock != null;
+    public bool IsParrying() => CurrentBlock != null && CoreApi.World.ElapsedMilliseconds - BlockStartTime <= PerfectBlockTime;
 
     protected readonly string Name;
     protected MeleeBlock? CurrentBlock;
@@ -72,8 +94,11 @@ public class MeleeBlockPlayerBehavior : EntityBehavior
     protected long PerfectBlockTime;
     protected const string StatCategory = "parry-player-behavior";
     protected int DirectionIndex = 0;
+    protected int ItemId = 0;
+    protected bool RightHand = true;
+    protected EntityAgent? Entity => entity as EntityAgent;
 
-    protected virtual void OnPerfectBlock(DamageSource damageSource, ref float damage, int directionIndex) => CurrentBlock?.OnPerfectBlock(entity, damageSource, ref damage, directionIndex);
+    protected virtual void OnParry(DamageSource damageSource, ref float damage, int directionIndex) => CurrentBlock?.OnParry(entity, damageSource, ref damage, directionIndex);
     protected virtual void OnBlock(DamageSource damageSource, ref float damage, int directionIndex) => CurrentBlock?.OnBlock(entity, damageSource, ref damage, directionIndex);
     protected virtual void OnCancel() => CurrentBlock?.OnCancel(entity);
 }
@@ -126,14 +151,14 @@ public readonly struct BlockDirections
 
 public class MeleeBlock
 {
-    public TimeSpan PerfectBlockWindow { get; set; }
+    public TimeSpan ParryWindow { get; set; }
     public DirectionConstrain Coverage { get; set; }
     public List<BlockDirections> Directions { get; set; } = new();
-    public bool DirectionlessPerfectBlock { get; set; }
+    public bool DirectionlessParry { get; set; }
     public float DamageReduction { get; set; }
 
     public AssetLocation? BlockSound { get; set; }
-    public AssetLocation? PerfectBlockSound { get; set; }
+    public AssetLocation? ParrySound { get; set; }
     public AssetLocation? CancelSound { get; set; }
 
     public void OnBlock(Entity entity, DamageSource damageSource, ref float damage, int directionIndex)
@@ -166,7 +191,7 @@ public class MeleeBlock
         if (BlockSound != null) entity.Api.World.PlaySoundAt(BlockSound, entity);
     }
 
-    public void OnPerfectBlock(Entity entity, DamageSource damageSource, ref float damage, int directionIndex)
+    public void OnParry(Entity entity, DamageSource damageSource, ref float damage, int directionIndex)
     {
         Entity? source = damageSource.SourceEntity ?? damageSource.CauseEntity;
 
@@ -183,7 +208,7 @@ public class MeleeBlock
             targetId = playerTarget.GetName();
         }
 
-        if (damageSource is IDirectionalDamage directionDamage && !DirectionlessPerfectBlock && !Directions[directionIndex].Test(directionDamage.Direction))
+        if (damageSource is IDirectionalDamage directionDamage && !DirectionlessParry && !Directions[directionIndex].Test(directionDamage.Direction))
         {
             if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', failed direction check on perfect blocking. Block direction: {Directions[directionIndex]}, attack direction: {directionDamage.Direction}.");
             return;
@@ -193,7 +218,7 @@ public class MeleeBlock
 
         if (entity.Api.Side == EnumAppSide.Server) LoggerUtil.Verbose(entity.Api, this, $"Entity '{targetId}', attacked by '{attackerId}', successfully performed perfect block.");
 
-        if (PerfectBlockSound != null) entity.Api.World.PlaySoundAt(PerfectBlockSound, entity);
+        if (ParrySound != null) entity.Api.World.PlaySoundAt(ParrySound, entity);
     }
 
     public void OnCancel(Entity entity)
