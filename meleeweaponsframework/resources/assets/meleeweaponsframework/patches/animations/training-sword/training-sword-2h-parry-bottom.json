@@ -1,0 +1,266 @@
+[
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-parry-bottom-tp-hands", "animation": "meleeweaponsframework-training-2h-parry-bottom-tp-hands", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-parry-bottom-tp-hands",
+      "code": "meleeweaponsframework-training-2h-parry-bottom-tp-hands",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 30,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -63.0 },
+						"LowerArmR": { "rotationX": -34.0, "rotationY": -9.0, "rotationZ": 0.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": -12.0, "rotationZ": 18.0 },
+						"UpperArmL": { "rotationX": -6.0, "rotationY": 0.0, "rotationZ": -49.0 },
+						"LowerArmL": { "rotationX": 45.0, "rotationY": 11.0, "rotationZ": -4.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 5,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": -10.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -58.0 },
+						"LowerArmR": { "rotationX": -25.0, "rotationY": -25.0, "rotationZ": 11.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": -38.0, "rotationZ": 30.0 },
+						"UpperArmL": { "rotationX": -16.0, "rotationY": 12.0, "rotationZ": -39.0 },
+						"LowerArmL": { "rotationX": 66.0, "rotationY": 0.0, "rotationZ": -6.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 10.0, "rotationZ": -4.0 }
+					}
+				},
+				{
+					"frame": 10,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -66.0 },
+						"LowerArmR": { "rotationX": -25.0, "rotationY": 20.0, "rotationZ": 11.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 40.0, "rotationZ": 63.0 },
+						"UpperArmL": { "rotationX": 30.0, "rotationY": 5.0, "rotationZ": -50.0 },
+						"LowerArmL": { "rotationX": 38.0, "rotationY": 0.0, "rotationZ": -6.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -8.0 }
+					}
+				},
+				{
+					"frame": 15,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": -10.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 55.0, "rotationY": 1.0, "rotationZ": -85.0 },
+						"LowerArmR": { "rotationX": -10.0, "rotationY": 20.0, "rotationZ": -6.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 61.0 },
+						"UpperArmL": { "rotationX": 13.0, "rotationY": -20.0, "rotationZ": -81.0 },
+						"LowerArmL": { "rotationX": 27.0, "rotationY": 0.0, "rotationZ": -4.0 },
+						"Neck": { "rotationX": -1.0, "rotationY": 10.0, "rotationZ": -8.0 }
+					}
+				}
+      ]
+    }
+	},
+	{
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-parry-bottom-fp-hands", "animation": "meleeweaponsframework-training-2h-parry-bottom-fp-hands", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-parry-bottom-fp-hands",
+      "code": "meleeweaponsframework-training-2h-parry-bottom-fp-hands",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 30,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -63.0 },
+						"LowerArmR": { "rotationX": -34.0, "rotationY": -9.0, "rotationZ": 0.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": -12.0, "rotationZ": 18.0 },
+						"UpperArmL": { "rotationX": -6.0, "rotationY": 0.0, "rotationZ": -49.0 },
+						"LowerArmL": { "rotationX": 45.0, "rotationY": 11.0, "rotationZ": -4.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 5,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": -10.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -58.0 },
+						"LowerArmR": { "rotationX": -25.0, "rotationY": -25.0, "rotationZ": 11.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": -38.0, "rotationZ": 30.0 },
+						"UpperArmL": { "rotationX": -16.0, "rotationY": 12.0, "rotationZ": -39.0 },
+						"LowerArmL": { "rotationX": 66.0, "rotationY": 0.0, "rotationZ": -6.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 10.0, "rotationZ": -4.0 }
+					}
+				},
+				{
+					"frame": 10,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -66.0 },
+						"LowerArmR": { "rotationX": -25.0, "rotationY": 20.0, "rotationZ": 11.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 40.0, "rotationZ": 63.0 },
+						"UpperArmL": { "rotationX": 30.0, "rotationY": 5.0, "rotationZ": -50.0 },
+						"LowerArmL": { "rotationX": 38.0, "rotationY": 0.0, "rotationZ": -6.0 },
+						"Neck": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -8.0 }
+					}
+				},
+				{
+					"frame": 15,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": -10.0, "rotationZ": 0.0 },
+						"UpperArmR": { "rotationX": 55.0, "rotationY": 1.0, "rotationZ": -85.0 },
+						"LowerArmR": { "rotationX": -10.0, "rotationY": 20.0, "rotationZ": -6.0 },
+						"ItemAnchor": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 61.0 },
+						"UpperArmL": { "rotationX": 13.0, "rotationY": -20.0, "rotationZ": -81.0 },
+						"LowerArmL": { "rotationX": 27.0, "rotationY": 0.0, "rotationZ": -4.0 },
+						"Neck": { "rotationX": -1.0, "rotationY": 10.0, "rotationZ": -8.0 }
+					}
+				}
+      ]
+    }
+	},
+	{
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-parry-bottom-tp-legs", "animation": "meleeweaponsframework-training-2h-parry-bottom-tp-legs", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-parry-bottom-tp-legs",
+      "code": "meleeweaponsframework-training-2h-parry-bottom-tp-legs",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 30,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"LowerTorso": { "offsetX": 0.0, "offsetY": 0.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 5,
+					"elements": {
+						"LowerTorso": { "offsetX": -1.2, "offsetY": 0.2, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 5.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 7.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -10.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 17.0 }
+					}
+				},
+				{
+					"frame": 10,
+					"elements": {
+						"LowerTorso": { "offsetX": 1.4, "offsetY": -0.2, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 2.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -25.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 20.0 }
+					}
+				},
+				{
+					"frame": 15,
+					"elements": {
+						"LowerTorso": { "offsetX": 3.2, "offsetY": -1.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 23.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -40.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 33.0 }
+					}
+				}
+      ]
+    }
+	},
+	{
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "meleeweaponsframework-training-2h-parry-bottom-fp-legs", "animation": "meleeweaponsframework-training-2h-parry-bottom-fp-legs", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "meleeweaponsframework-training-2h-parry-bottom-fp-legs",
+      "code": "meleeweaponsframework-training-2h-parry-bottom-fp-legs",
+      "easeInSpeed": 1,
+      "easeOutSpeed": 1,
+      "quantityframes": 30,
+      "onActivityStopped": "EaseOut",
+      "onAnimationEnd": "Hold",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"LowerTorso": { "offsetX": 0.0, "offsetY": 0.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 }
+					}
+				},
+				{
+					"frame": 5,
+					"elements": {
+						"LowerTorso": { "offsetX": -1.2, "offsetY": 0.2, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 5.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 7.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -10.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 17.0 }
+					}
+				},
+				{
+					"frame": 10,
+					"elements": {
+						"LowerTorso": { "offsetX": 1.4, "offsetY": -0.2, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 2.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -25.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 20.0 }
+					}
+				},
+				{
+					"frame": 15,
+					"elements": {
+						"LowerTorso": { "offsetX": 3.2, "offsetY": -1.0, "offsetZ": 0.0, "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 8.0 },
+						"UpperFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 0.0 },
+						"LowerFootL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 23.0 },
+						"UpperFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -40.0 },
+						"LowerFootR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": 33.0 }
+					}
+				}
+      ]
+    }
+  }
+]
