@@ -13,38 +13,46 @@
       "VanillaAnimationsNaming": true,
       "CanChangeGrip": true,
       "DebugCollider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
-      "DebugParryCollider": [
-          0.2, 0.3, 0.5,
-          0.2, -0.3, 0.5,
-          3.3, -0.3, 0.5,
-          3.3, 0.3, 0.5
+      "DebugParryColliders": [
+        [
+          0.2, 0.2, 0.5,
+          0.2, -0.2, 0.5,
+          3.3, -0.2, 0.5,
+          3.3, 0.2, 0.5
+        ],
+        [
+          0.2, 0, 0.3,
+          0.2, 0, 0.7,
+          3.3, 0, 0.7,
+          3.3, 0, 0.3
+        ]
       ],
       "OneHandedParriesColliders": [
         [
-          0.2, 0.3, 0.5,
-          0.2, -0.3, 0.5,
-          3.3, -0.3, 0.5,
-          3.3, 0.3, 0.5
+          0.2, 0.2, 0.5,
+          0.2, -0.2, 0.5,
+          3.3, -0.2, 0.5,
+          3.3, 0.2, 0.5
         ],
         [
-          0.2, 0, 0.2,
-          0.2, 0, 0.8,
-          3.3, 0, 0.8,
-          3.3, 0, 0.2
+          0.2, 0, 0.3,
+          0.2, 0, 0.7,
+          3.3, 0, 0.7,
+          3.3, 0, 0.3
         ]
       ],
       "TwoHandedParriesColliders": [
         [
-          0.2, 0.3, 0.5,
-          0.2, -0.3, 0.5,
-          3.3, -0.3, 0.5,
-          3.3, 0.3, 0.5
+          0.2, 0.2, 0.5,
+          0.2, -0.2, 0.5,
+          3.3, -0.2, 0.5,
+          3.3, 0.2, 0.5
         ],
         [
-          0.2, 0, 0.2,
-          0.2, 0, 0.8,
-          3.3, 0, 0.8,
-          3.3, 0, 0.2
+          0.2, 0, 0.3,
+          0.2, 0, 0.7,
+          3.3, 0, 0.7,
+          3.3, 0, 0.3
         ]
       ],
       "AttacksOneHanded": {
@@ -109,6 +117,117 @@
           "AttackDamage": 0,
           "AttackTier": 0,
           "AttackDamageType": "BluntAttack"
+        }
+      },
+      "BlockCooldownMs": 300,
+      "FeintCooldownMs": 1000,
+      "ParriesOneHanded": {
+        "Top": {
+          "Animation": "meleeweaponsframework-training-1h-parry-top",
+          "ParryDurationMs": 300,
+          "CoverageDegrees": 60,
+          "IncomingDamageMultiplier": 0.5,
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "Frame": 5,
+              "EasingFunction": "Sin",
+              "DurationMs": "150"
+            },
+            {
+              "Action": "Play",
+              "StartFrame": 5,
+              "TargetFrame": 15,
+              "EasingFunction": "SinQuadratic",
+              "DurationMs": "250"
+            }
+          ]
+        },
+        "BottomLeft": {
+          "Animation": "meleeweaponsframework-training-1h-parry-left",
+          "ParryDurationMs": 300,
+          "CoverageDegrees": 60,
+          "IncomingDamageMultiplier": 0.5,
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "Frame": 5,
+              "EasingFunction": "Sin",
+              "DurationMs": "150"
+            },
+            {
+              "Action": "Play",
+              "StartFrame": 5,
+              "TargetFrame": 15,
+              "EasingFunction": "SinQuadratic",
+              "DurationMs": "250"
+            }
+          ]
+        },
+        "BottomRight": {
+          "Animation": "meleeweaponsframework-training-1h-parry-right",
+          "ParryDurationMs": 300,
+          "CoverageDegrees": 60,
+          "IncomingDamageMultiplier": 0.5,
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "Frame": 5,
+              "EasingFunction": "Sin",
+              "DurationMs": "150"
+            },
+            {
+              "Action": "Play",
+              "StartFrame": 5,
+              "TargetFrame": 15,
+              "EasingFunction": "SinQuadratic",
+              "DurationMs": "250"
+            }
+          ]
+        }
+      },
+      "ParriesTwoHanded": {
+        "Top": {
+          "Animation": "meleeweaponsframework-training-2h-parry-top",
+          "ParryDurationMs": 300,
+          "CoverageDegrees": 60,
+          "IncomingDamageMultiplier": 0.5,
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "Frame": 5,
+              "EasingFunction": "Sin",
+              "DurationMs": "150"
+            },
+            {
+              "Action": "Play",
+              "StartFrame": 5,
+              "TargetFrame": 15,
+              "EasingFunction": "SinQuadratic",
+              "DurationMs": "250"
+            }
+          ]
+        },
+        "Bottom": {
+          "Animation": "meleeweaponsframework-training-2h-parry-bottom",
+          "ParryDurationMs": 300,
+          "CoverageDegrees": 60,
+          "IncomingDamageMultiplier": 0.5,
+          "AnimationParameters": [
+            {
+              "Action": "EaseIn",
+              "Frame": 5,
+              "EasingFunction": "Sin",
+              "DurationMs": "150"
+            },
+            {
+              "Action": "Play",
+              "StartFrame": 5,
+              "TargetFrame": 15,
+              "EasingFunction": "SinQuadratic",
+              "DurationMs": "250"
+            }
+          ]
         }
       }
     },

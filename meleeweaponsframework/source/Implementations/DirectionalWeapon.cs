@@ -2,8 +2,11 @@
 using AnimationManagerLib.API;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
+using Vintagestory.GameContent;
 
 namespace MeleeWeaponsFramework;
 
@@ -22,7 +25,7 @@ public class DirectionalWeaponParameters
 
     public float MaxReach { get; set; } = 6.0f;
     public float[] DebugCollider { get; set; } = new float[6];
-    public float[] DebugParryCollider { get; set; } = new float[12];
+    public float[][] DebugParryColliders { get; set; } = Array.Empty<float[]>();
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksOneHanded { get; set; } = new();
     public Dictionary<string, DirectionalWeaponAttackStats> AttacksTwoHanded { get; set; } = new();
 
@@ -31,22 +34,16 @@ public class DirectionalWeaponParameters
     public bool CanChangeGrip { get; set; } = false;
     public string DefaultGrip { get; set; } = "OneHanded";
     public float GripChangeCooldownMs { get; set; } = 200;
-    public bool DirectionlessPerfectBlockOneHanded { get; set; }
-    public bool DirectionlessPerfectBlockTwoHanded { get; set; }
+
+    public int FeintCooldownMs { get; set; } = 600;
+    public int BlockCooldownMs { get; set; } = 300;
     public string? BlockSound { get; set; }
-    public string? PerfectBlockSound { get; set; }
+    public string? ParrySound { get; set; }
     public string? CancelBlockSound { get; set; }
-    public float PerfectBlockWindowOneHandedMs { get; set; } = 300;
-    public float PerfectBlockWindowTwoHandedMs { get; set; } = 300;
-    public float CoverageDegreesOneHanded { get; set; } = 120;
-    public float CoverageDegreesTwoHanded { get; set; } = 120;
-    public float DamageMultiplierOneHanded { get; set; } = 0.5f;
-    public float DamageMultiplierTwoHanded { get; set; } = 0.5f;
     public float[][] OneHandedParriesColliders { get; set; } = Array.Empty<float[]>();
     public float[][] TwoHandedParriesColliders { get; set; } = Array.Empty<float[]>();
-
-    public Dictionary<string, DirectionalWeaponParryStats> ParriesOnHanded { get; set; } = new();
-    public Dictionary<string, DirectionalWeaponParryStats> ParriesTwoHanded { get; set; } = new();
+    public Dictionary<string, DirectionalWeaponBlockStats> ParriesOneHanded { get; set; } = new();
+    public Dictionary<string, DirectionalWeaponBlockStats> ParriesTwoHanded { get; set; } = new();
 }
 
 public class DirectionalWeaponAttackStats
@@ -64,15 +61,13 @@ public class DirectionalWeaponAttackStats
     public WeaponAnimationParameters[] AnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
 
-public class DirectionalWeaponParryStats
+public class DirectionalWeaponBlockStats
 {
     public string Animation { get; set; } = "";
-    public float AnimationFrame { get; set; } = 0f;
-    public float EaseInTimeMs { get; set; } = 100;
-    public float EaseOutTimeMs { get; set; } = 100;
-    public string[] Directions { get; set; } = Array.Empty<string>();
-    public WeaponAnimationParameters[] EaseInAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
-    public WeaponAnimationParameters[] EaseOutAnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
+    public int ParryDurationMs { get; set; } = 100;
+    public float CoverageDegrees { get; set; } = 120;
+    public float IncomingDamageMultiplier { get; set; } = 0.5f;
+    public WeaponAnimationParameters[] AnimationParameters { get; set; } = Array.Empty<WeaponAnimationParameters>();
 }
 
 public class WeaponAnimationParameters
@@ -110,6 +105,13 @@ public enum GripType
     TwoHanded
 }
 
+public enum WeaponActivity
+{
+    Idle,
+    Attacking,
+    Blocking
+}
+
 public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 {
     public int WeaponItemId => ItemId;
@@ -122,6 +124,9 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
     public IEnumerable<IParryCollider> RelativeColliders { get; protected set; } = Array.Empty<IParryCollider>();
     public IEnumerable<IParryCollider> InWorldColliders { get; set; } = Array.Empty<IParryCollider>();
+
+    public WeaponActivity CurrentMainHandActivity { get; protected set; } = WeaponActivity.Idle;
+    public WeaponActivity CurrentOffhandActivity { get; protected set; } = WeaponActivity.Idle;
 
     public override void OnLoaded(ICoreAPI api)
     {
@@ -147,9 +152,12 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
         ConstructAnimations();
         RegisterAttacks();
         RegisterParries();
-        
+
+        FeintCooldown = TimeSpan.FromMilliseconds(DirectionalWeaponParameters.FeintCooldownMs);
+        BlockCooldown = TimeSpan.FromMilliseconds(DirectionalWeaponParameters.BlockCooldownMs);
+
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
-        DebugParryCollider = new(DirectionalWeaponParameters.DebugParryCollider);
+        DebugParryColliders = DirectionalWeaponParameters.DebugParryColliders.Select(collider => new RectangularCollider(collider)).ToArray();
 
     }
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
@@ -228,7 +236,7 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
         if (Api != null)
         {
             DebugCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
-            DebugParryCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity, ColorUtil.ToRgba(255, 255, 0, 0));
+            DebugParryColliders.Foreach(collider => collider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity, ColorUtil.ToRgba(255, 255, 0, 0)));
         }
 #endif
     }
@@ -259,23 +267,22 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     protected DirectionsConfiguration DirectionsConfigurationTwoHanded { get; set; } = DirectionsConfiguration.None;
 
     protected LineSegmentCollider DebugCollider { get; set; }
-    protected RectangularCollider DebugParryCollider { get; set; }
+    protected RectangularCollider[] DebugParryColliders { get; set; }
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsTwoHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesEaseOutAnimationsTwoHanded { get; set; } = new();
 
-    protected Dictionary<AttackDirection, int> ParriesCooldownsOneHanded { get; set; } = new();
-    protected Dictionary<AttackDirection, int> ParriesCooldownsTwoHanded { get; set; } = new();
     protected Dictionary<AttackDirection, AttackId> AttacksOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, AttackId> AttacksTwoHanded { get; set; } = new();
-    protected MeleeBlockId BlockIdOneHanded { get; set; } = new(0, 0);
-    protected MeleeBlockId BlockIdTwoHanded { get; set; } = new(0, 1);
-    protected Dictionary<GripType, IEnumerable<IParryCollider>> ParryCollidersByGrip = new();
+    protected Dictionary<AttackDirection, MeleeBlockId> BlockIdsOneHanded { get; set; } = new();
+    protected Dictionary<AttackDirection, MeleeBlockId> BlockIdsTwoHanded { get; set; } = new();
+    protected TimeSpan BlockCooldown { get; set; } = TimeSpan.Zero;
+    protected TimeSpan FeintCooldown { get; set; } = TimeSpan.Zero;
+    protected Dictionary<GripType, IEnumerable<IParryCollider>> ParryCollidersByGrip { get; set; } = new();
     protected DirectionalWeaponParameters DirectionalWeaponParameters { get; private set; } = new();
-    protected long CooldownTimer { get; set; } = 0;
+    protected long CooldownTimer { get; set; } = -1;
+    protected long FeintCooldownTimer { get; set; } = -1;
     protected GripType DefaultGrip { get; set; } = GripType.OneHanded;
     protected GripType Grip { get; set; } = GripType.OneHanded;
     protected bool CanParry => Grip == GripType.OneHanded ? ParriesAnimationsOneHanded.Any() : ParriesAnimationsTwoHanded.Any();
@@ -283,14 +290,19 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
     [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Active)]
     protected virtual bool OnAttackOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
-    {    
+    {
         if (Grip != GripType.OneHanded) return false;
-
         if (AltPressed() || eventData.Modifiers.Contains(EnumEntityAction.CtrlKey)) return false;
-
-        if (state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
-
+        if (!CheckIfCanAttack(mainHand, state)) return false;
         if (!AttacksOneHanded.ContainsKey(direction)) return false;
+        if (CurrentActivity(mainHand) == WeaponActivity.Blocking)
+        {
+            if (FeintCooldownTimer != -1) return false;
+            StopParry(mainHand);
+            FeintCooldownTimer = Api?.World.RegisterCallback((dt) => FeintCooldownTimer = -1, (int)FeintCooldown.TotalMilliseconds) ?? 0;
+        }
+
+        
 
         MeleeSystem?.Start(AttacksOneHanded[direction], result => OnAttackCallback(result, slot, direction, mainHand), direction);
         TimeSpan easeOutTime = TimeSpan.FromMilliseconds(500);
@@ -301,24 +313,35 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
             Behavior?.PlayAnimation(AttacksAnimationsOneHanded[direction].animation, readyAnimation, easeOutTime, true, true, null, AttacksAnimationsOneHanded[direction].parameters);
         }
         if (Behavior != null) Behavior.SuppressLMB = true;
-        
+
         state = MeleeWeaponState.Active;
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Attacking;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Attacking;
+        }
 
         OnAttackStart(slot, player, ref state, eventData, mainHand, direction);
 
         return true;
     }
-    
+
     [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Active)]
     protected virtual bool OnAttackTwoHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.TwoHanded) return false;
-
         if (AltPressed() || eventData.Modifiers.Contains(EnumEntityAction.CtrlKey)) return false;
-
-        if (state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
-
+        if (!CheckIfCanAttack(mainHand, state)) return false;
         if (!AttacksTwoHanded.ContainsKey(direction)) return false;
+        if (CurrentActivity(mainHand) == WeaponActivity.Blocking)
+        {
+            if (FeintCooldownTimer != -1) return false;
+            StopParry(mainHand);
+            FeintCooldownTimer = Api?.World.RegisterCallback((dt) => FeintCooldownTimer = -1, (int)FeintCooldown.TotalMilliseconds) ?? 0;
+        }
 
         MeleeSystem?.Start(AttacksTwoHanded[direction], result => OnAttackCallback(result, slot, direction, mainHand), direction);
         TimeSpan easeOutTime = TimeSpan.FromMilliseconds(500);
@@ -330,11 +353,20 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
         if (Behavior != null) Behavior.SuppressLMB = true;
 
         state = MeleeWeaponState.Active;
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Attacking;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Attacking;
+        }
 
         OnAttackStart(slot, player, ref state, eventData, mainHand, direction);
 
         return true;
     }
+    
     protected virtual void OnAttackStart(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
 
@@ -343,84 +375,83 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     {
         if (result.Result == AttackResultFlag.Finished)
         {
-            MeleeSystem?.Stop();
-            Behavior?.SetState(MeleeWeaponState.Idle);
-            if (Behavior != null) Behavior.SuppressLMB = false;
+            StopAttack(mainHand);
         }
     }
-    
+
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Active)]
     protected virtual bool OnBlockOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.OneHanded) return false;
-
         if (AltPressed()) return false;
-
-        if (state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
-
+        if (!CheckIfCanParry(mainHand, state)) return false;
         if (!ParriesAnimationsOneHanded.ContainsKey(direction)) return false;
+        if (CurrentActivity(mainHand) == WeaponActivity.Attacking)
+        {
+            if (FeintCooldownTimer != -1) return false;
+            StopAttack(mainHand);
+            FeintCooldownTimer = Api?.World.RegisterCallback((dt) => FeintCooldownTimer = -1, (int)FeintCooldown.TotalMilliseconds) ?? 0;
+        }
 
         state = MeleeWeaponState.Active;
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Blocking;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Blocking;
+        }
 
+        Console.WriteLine($"PlayAnimation: {ParriesAnimationsOneHanded[direction].animation.FpHands}");
         Behavior?.PlayAnimation(ParriesAnimationsOneHanded[direction].animation, mainHand, false, null, ParriesAnimationsOneHanded[direction].parameters);
-        BlockSystem?.Start(BlockIdOneHanded, (int)direction, mainHand);
+        BlockSystem?.Start(BlockIdsOneHanded[direction], (int)direction, mainHand);
 
         return true;
     }
-    
+
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Active)]
     protected virtual bool OnBlockTwoHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
         if (Grip != GripType.TwoHanded) return false;
-
         if (AltPressed()) return false;
-
-        if (state != MeleeWeaponState.Idle || Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
-
+        if (!CheckIfCanParry(mainHand, state)) return false;
         if (!ParriesAnimationsTwoHanded.ContainsKey(direction)) return false;
+        if (CurrentActivity(mainHand) == WeaponActivity.Attacking)
+        {
+            if (FeintCooldownTimer != -1) return false;
+            StopAttack(mainHand);
+            FeintCooldownTimer = Api?.World.RegisterCallback((dt) => FeintCooldownTimer = -1, (int)FeintCooldown.TotalMilliseconds) ?? 0;
+        }
 
         state = MeleeWeaponState.Active;
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Blocking;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Blocking;
+        }
 
         Behavior?.PlayAnimation(ParriesAnimationsTwoHanded[direction].animation, mainHand, false, null, ParriesAnimationsTwoHanded[direction].parameters);
-        BlockSystem?.Start(BlockIdTwoHanded, (int)direction, mainHand);
+        BlockSystem?.Start(BlockIdsTwoHanded[direction], (int)direction, mainHand);
 
         return true;
     }
-    
+
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Released)]
-    protected virtual bool OnEaseOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
+    protected virtual bool OnEase(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (Grip != GripType.OneHanded) return false;
-
-        if (mainHand) return false;
-
-        if (state != MeleeWeaponState.Active) return true;
+        if (state != MeleeWeaponState.Active) return false;
+        if (CurrentActivity(mainHand) != WeaponActivity.Blocking) return false;
+        
         state = MeleeWeaponState.Cooldown;
-
-        CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), ParriesCooldownsOneHanded[direction]) ?? 0;
-        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsOneHanded[direction].parameters);
-        BlockSystem?.Stop();
+        StopParry(mainHand);
 
         return true;
     }
-    
-    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Released)]
-    protected virtual bool OnEaseTwoHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
-    {
-        if (Grip != GripType.TwoHanded) return false;
 
-        if (mainHand) return false;
-
-        if (state != MeleeWeaponState.Active) return true;
-        state = MeleeWeaponState.Cooldown;
-
-        CooldownTimer = Api?.World.RegisterCallback((dt) => Behavior?.SetState(MeleeWeaponState.Idle, mainHand), ParriesCooldownsTwoHanded[direction]) ?? 0;
-        Behavior?.StopAnimation(mainHand, true, null, ParriesEaseOutAnimationsTwoHanded[direction].parameters);
-        BlockSystem?.Stop();
-
-        return true;
-    }
-    
     [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
     protected virtual bool OnChangeGrip(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
@@ -467,14 +498,8 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
         AttacksAnimationsOneHanded = ParseAttacksAnimationsFromStats(DirectionalWeaponParameters.AttacksOneHanded);
         AttacksAnimationsTwoHanded = ParseAttacksAnimationsFromStats(DirectionalWeaponParameters.AttacksTwoHanded);
 
-        ParriesAnimationsOneHanded = ParseParriesAnimationsFromStats(DirectionalWeaponParameters.ParriesOnHanded);
+        ParriesAnimationsOneHanded = ParseParriesAnimationsFromStats(DirectionalWeaponParameters.ParriesOneHanded);
         ParriesAnimationsTwoHanded = ParseParriesAnimationsFromStats(DirectionalWeaponParameters.ParriesTwoHanded);
-
-        ParriesEaseOutAnimationsOneHanded = ParseParriesEaseOutAnimationsFromStats(DirectionalWeaponParameters.ParriesOnHanded);
-        ParriesEaseOutAnimationsTwoHanded = ParseParriesEaseOutAnimationsFromStats(DirectionalWeaponParameters.ParriesTwoHanded);
-
-        ParriesCooldownsOneHanded = DirectionalWeaponParameters.ParriesOnHanded.ToDictionary(entry => Enum.Parse<AttackDirection>(entry.Key), entry => (int)entry.Value.EaseOutTimeMs);
-        ParriesCooldownsTwoHanded = DirectionalWeaponParameters.ParriesTwoHanded.ToDictionary(entry => Enum.Parse<AttackDirection>(entry.Key), entry => (int)entry.Value.EaseOutTimeMs);
     }
     protected void RegisterAttacks()
     {
@@ -498,20 +523,89 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     }
     protected void RegisterParries()
     {
-        MeleeBlock blockOneHanded = ParseBlocksFromStatsOneHanded(DirectionalWeaponParameters);
-        MeleeBlock blockTwoHanded = ParseBlocksFromStatsTwoHanded(DirectionalWeaponParameters);
+        Dictionary<AttackDirection, MeleeBlock> blocksOneHanded = ParseBlocksFromStats(DirectionalWeaponParameters.ParriesOneHanded, DirectionalWeaponParameters);
+        Dictionary<AttackDirection, MeleeBlock> blocksTwoHanded = ParseBlocksFromStats(DirectionalWeaponParameters.ParriesTwoHanded, DirectionalWeaponParameters);
 
         ParryCollidersByGrip[GripType.OneHanded] = DirectionalWeaponParameters.OneHandedParriesColliders.Select(collider => new RectangularCollider(collider)).OfType<IParryCollider>();
         ParryCollidersByGrip[GripType.TwoHanded] = DirectionalWeaponParameters.TwoHandedParriesColliders.Select(collider => new RectangularCollider(collider)).OfType<IParryCollider>();
 
-        BlockIdOneHanded = new(WeaponItemId, 0);
-        BlockIdTwoHanded = new(WeaponItemId, 1);
+        foreach ((AttackDirection direction, MeleeBlock block) in blocksOneHanded)
+        {
+            MeleeBlockId id = new(WeaponItemId, (int)direction + (int)GripType.OneHanded * Enum.GetValues<AttackDirection>().Length);
+            BlockIdsOneHanded.Add(direction, id);
+            ServerBlockSystem?.Register(id, block);
+            BlockSystem?.Register(id, block);
+        }
 
-        ServerBlockSystem?.Register(BlockIdOneHanded, blockOneHanded);
-        ServerBlockSystem?.Register(BlockIdTwoHanded, blockTwoHanded);
+        foreach ((AttackDirection direction, MeleeBlock block) in blocksTwoHanded)
+        {
+            MeleeBlockId id = new(WeaponItemId, (int)direction + (int)GripType.TwoHanded * Enum.GetValues<AttackDirection>().Length);
+            BlockIdsTwoHanded.Add(direction, id);
+            ServerBlockSystem?.Register(id, block);
+            BlockSystem?.Register(id, block);
+        }
+    }
 
-        BlockSystem?.Register(BlockIdOneHanded, blockOneHanded);
-        BlockSystem?.Register(BlockIdTwoHanded, blockTwoHanded);
+    protected bool CheckIfCanParry(bool mainHand, MeleeWeaponState state)
+    {
+        if (FeintCooldownTimer != -1) return false;
+        if (Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+        if (state == MeleeWeaponState.Cooldown) return false;
+
+        WeaponActivity activity = mainHand ? CurrentMainHandActivity : CurrentOffhandActivity;
+        if (state == MeleeWeaponState.Idle || activity == WeaponActivity.Attacking) return true;
+
+        return false;
+    }
+    protected bool CheckIfCanAttack(bool mainHand, MeleeWeaponState state)
+    {
+        if (Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+        if (state == MeleeWeaponState.Cooldown) return false;
+
+        WeaponActivity activity = mainHand ? CurrentMainHandActivity : CurrentOffhandActivity;
+        if (state == MeleeWeaponState.Idle || activity == WeaponActivity.Blocking) return true;
+
+        return false;
+    }
+
+    protected void StopAttack(bool mainHand)
+    {
+        MeleeSystem?.Stop();
+        Behavior?.SetState(MeleeWeaponState.Idle);
+        if (Behavior != null) Behavior.SuppressLMB = false;
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Idle;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Idle;
+        }
+    }
+    protected void StopParry(bool mainHand)
+    {
+        if (CooldownTimer != -1) Api?.World.UnregisterCallback(CooldownTimer);
+        CooldownTimer = Api?.World.RegisterCallback((dt) => CooldownCallback(mainHand), (int)BlockCooldown.TotalMilliseconds) ?? 0;
+
+        Behavior?.StopAnimation(mainHand, true, null, RunParameters.EaseOut(BlockCooldown, ProgressModifierType.Sin));
+        if (Behavior != null) Behavior.SuppressRMB = false;
+        BlockSystem?.Stop();
+        
+        if (mainHand)
+        {
+            CurrentMainHandActivity = WeaponActivity.Idle;
+        }
+        else
+        {
+            CurrentOffhandActivity = WeaponActivity.Idle;
+        }
+    }
+    protected WeaponActivity CurrentActivity(bool mainHand) => mainHand ? CurrentMainHandActivity : CurrentOffhandActivity;
+    protected void CooldownCallback(bool mainHand)
+    {
+        MeleeWeaponState currentState = Behavior?.GetState(mainHand) ?? MeleeWeaponState.Idle;
+        if (currentState == MeleeWeaponState.Cooldown) Behavior?.SetState(MeleeWeaponState.Idle, mainHand);
+        CooldownTimer = -1;
     }
 
     protected static Dictionary<AttackDirection, MeleeAttackStats> ParseAttacksFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks, float maxReach)
@@ -544,71 +638,26 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
         return result;
     }
-    protected static MeleeBlock ParseBlocksFromStatsOneHanded(DirectionalWeaponParameters stats)
+    protected static Dictionary<AttackDirection, MeleeBlock> ParseBlocksFromStats(Dictionary<string, DirectionalWeaponBlockStats> attacks, DirectionalWeaponParameters stats)
     {
-        List<BlockDirections> directions = new();
-        Dictionary<AttackDirection, AttackDirection[]> attacksDirections = stats.ParriesOnHanded
-            .Select(entry => (Enum.Parse<AttackDirection>(entry.Key), entry.Value.Directions.Select(Enum.Parse<AttackDirection>).ToArray()))
-            .ToDictionary(entry => entry.Item1, entry => entry.Item2);
+        Dictionary<AttackDirection, MeleeBlock> result = new();
 
-        for (int index = 0; index < 8; index++)
+        foreach ((string directionName, DirectionalWeaponBlockStats? blockStats) in attacks)
         {
-            AttackDirection direction = (AttackDirection)index;
+            AttackDirection direction = Enum.Parse<AttackDirection>(directionName);
 
-            if (attacksDirections.TryGetValue(direction, out AttackDirection[] attackDirections))
+            result.Add(direction, new()
             {
-                directions.Add(new(attackDirections));
-            }
-            else
-            {
-                directions.Add(new());
-            }
+                ParryWindow = TimeSpan.FromMilliseconds(blockStats.ParryDurationMs),
+                Coverage = DirectionConstrain.FromDegrees(blockStats.CoverageDegrees),
+                DamageReduction = blockStats.IncomingDamageMultiplier,
+                BlockSound = stats.BlockSound != null ? new AssetLocation(stats.BlockSound) : null,
+                ParrySound = stats.ParrySound != null ? new AssetLocation(stats.ParrySound) : null,
+                CancelSound = stats.CancelBlockSound != null ? new AssetLocation(stats.CancelBlockSound) : null,
+            });
         }
 
-        return new()
-        {
-            ParryWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowOneHandedMs),
-            Coverage = DirectionConstrain.FromDegrees(stats.CoverageDegreesOneHanded),
-            DirectionlessParry = stats.DirectionlessPerfectBlockOneHanded,
-            DamageReduction = stats.DamageMultiplierOneHanded,
-            BlockSound = stats.BlockSound != null ? new AssetLocation(stats.BlockSound) : null,
-            ParrySound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
-            CancelSound = stats.CancelBlockSound != null ? new AssetLocation(stats.CancelBlockSound) : null,
-            Directions = directions
-        };
-    }
-    protected static MeleeBlock ParseBlocksFromStatsTwoHanded(DirectionalWeaponParameters stats)
-    {
-        List<BlockDirections> directions = new();
-        Dictionary<AttackDirection, AttackDirection[]> attacksDirections = stats.ParriesTwoHanded
-            .Select(entry => (Enum.Parse<AttackDirection>(entry.Key), entry.Value.Directions.Select(Enum.Parse<AttackDirection>).ToArray()))
-            .ToDictionary(entry => entry.Item1, entry => entry.Item2);
-
-        for (int index = 0; index < 8; index++)
-        {
-            AttackDirection direction = (AttackDirection)index;
-
-            if (attacksDirections.TryGetValue(direction, out AttackDirection[] attackDirections))
-            {
-                directions.Add(new(attackDirections));
-            }
-            else
-            {
-                directions.Add(new());
-            }
-        }
-
-        return new()
-        {
-            ParryWindow = TimeSpan.FromMilliseconds(stats.PerfectBlockWindowTwoHandedMs),
-            Coverage = DirectionConstrain.FromDegrees(stats.CoverageDegreesTwoHanded),
-            DirectionlessParry = stats.DirectionlessPerfectBlockTwoHanded,
-            DamageReduction = stats.DamageMultiplierTwoHanded,
-            BlockSound = stats.BlockSound != null ? new AssetLocation(stats.BlockSound) : null,
-            ParrySound = stats.PerfectBlockSound != null ? new AssetLocation(stats.PerfectBlockSound) : null,
-            CancelSound = stats.CancelBlockSound != null ? new AssetLocation(stats.CancelBlockSound) : null,
-            Directions = directions
-        };
+        return result;
     }
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseAttacksAnimationsFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks)
     {
@@ -640,56 +689,17 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
         return result;
     }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseParriesAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
+    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseParriesAnimationsFromStats(Dictionary<string, DirectionalWeaponBlockStats> parries)
     {
         Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> result = new();
         AnimationManagerLibSystem? animationSystem = Api?.ModLoader.GetModSystem<AnimationManagerLibSystem>();
         if (animationSystem == null) return result;
 
-        foreach ((string direction, DirectionalWeaponParryStats stats) in parries)
+        foreach ((string direction, DirectionalWeaponBlockStats stats) in parries)
         {
             RunParameters[] parameters;
 
-            if (stats.EaseInAnimationParameters.Length > 0)
-            {
-                parameters = stats.EaseInAnimationParameters.Select(element => element.ToRunParameters()).ToArray();
-            }
-            else
-            {
-                parameters = new RunParameters[]
-                {
-                     RunParameters.EaseIn(stats.EaseInTimeMs / 1000.0f, stats.AnimationFrame, ProgressModifierType.SinQuadratic)
-                };
-            }
-
-            PlayerAnimationData animation = new(stats.Animation, animationSystem);
-
-            result.Add(Enum.Parse<AttackDirection>(direction), (animation, parameters));
-        }
-
-        return result;
-    }
-    protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> ParseParriesEaseOutAnimationsFromStats(Dictionary<string, DirectionalWeaponParryStats> parries)
-    {
-        Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] paremters)> result = new();
-        AnimationManagerLibSystem? animationSystem = Api?.ModLoader.GetModSystem<AnimationManagerLibSystem>();
-        if (animationSystem == null) return result;
-
-        foreach ((string direction, DirectionalWeaponParryStats stats) in parries)
-        {
-            RunParameters[] parameters;
-            
-            if (stats.EaseOutAnimationParameters.Length > 0)
-            {
-                parameters = stats.EaseOutAnimationParameters.Select(element => element.ToRunParameters()).ToArray();
-            }
-            else
-            {
-                parameters = new RunParameters[]
-                {
-                     RunParameters.EaseOut(stats.EaseOutTimeMs / 1000.0f, ProgressModifierType.Sin)
-                };
-            }
+            parameters = stats.AnimationParameters.Select(element => element.ToRunParameters()).ToArray();
 
             PlayerAnimationData animation = new(stats.Animation, animationSystem);
 
