@@ -1758,6 +1758,26 @@
 					}
 				}
 			]
+		},
+
+		{
+			"name": "strugger",
+			"code": "strugger",
+			"quantityframes": 30,
+			"onActivityStopped": "Rewind",
+			"onAnimationEnd": "Repeat",
+			"keyframes": [
+				{
+					"frame": 0,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -10.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 }
+					}
+				}
+			]
 		}
 	]
 }

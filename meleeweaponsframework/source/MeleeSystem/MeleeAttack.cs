@@ -124,9 +124,13 @@ public sealed class MeleeAttack
 
         IEnumerable<(Entity entity, Vector3 point, AttackResultFlag hitType)> entitiesCollisions = CollideWithEntities(progress, player, _damagePackets, slot);
 
+        foreach ((_, _, AttackResultFlag hitType) in entitiesCollisions)
+        {
+            result |= hitType;
+        }
+
         if (entitiesCollisions.Any())
         {
-            result |= AttackResultFlag.HitEntity;
             damagePackets = _damagePackets;
             return new(result, entities: entitiesCollisions);
         }
@@ -233,6 +237,7 @@ public sealed class MeleeAttack
     private static Vector3? CollideWithMeleeBlock(MeleeBlockBehavior blockBehavior, MeleeAttackDamageType damageType)
     {
         IEnumerable<IParryCollider> colliders = blockBehavior.GetColliders();
+        
         float closestParameter = float.MaxValue;
         Vector3 closestIntersection = Vector3.Zero;
         bool intersected = false;
@@ -243,6 +248,8 @@ public sealed class MeleeAttack
                 closestParameter = parameter;
                 closestIntersection = intersection;
                 intersected = true;
+
+                Console.WriteLine($"closestParameter: {closestParameter}");
             }
         }
 

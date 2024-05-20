@@ -73,14 +73,14 @@ public class MeleeBlockBehavior : EntityBehavior
             if (Entity.RightHandItemSlot.Itemstack?.Item.Id != ItemId) return empty;
             if (Entity.RightHandItemSlot.Itemstack?.Item is not IHasParryCollider rightHand) return empty;
 
-            return rightHand.RelativeColliders.Select(collider => collider.Transform(Entity, Entity.RightHandItemSlot, clientApi)).OfType<IParryCollider>();
+            return rightHand.RelativeColliders.Select(collider => collider.Transform(clientApi.World.Player.Entity.Pos, Entity, Entity.RightHandItemSlot, clientApi)).OfType<IParryCollider>();
         }
         else
         {
             if (Entity.LeftHandItemSlot.Itemstack?.Item.Id != ItemId) return empty;
             if (Entity.LeftHandItemSlot.Itemstack?.Item is not IHasParryCollider leftHand) return empty;
 
-            return leftHand.RelativeColliders.Select(collider => collider.Transform(Entity, Entity.LeftHandItemSlot, clientApi)).OfType<IParryCollider>();
+            return leftHand.RelativeColliders.Select(collider => collider.Transform(clientApi.World.Player.Entity.Pos, Entity, Entity.LeftHandItemSlot, clientApi)).OfType<IParryCollider>();
         }
     }
 

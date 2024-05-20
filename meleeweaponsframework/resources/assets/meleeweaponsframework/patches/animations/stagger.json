@@ -1,0 +1,32 @@
+[
+  {
+    "file": "game:entities/humanoid/player",
+    "op": "add",
+    "path": "/client/animations/-",
+    "value": {"code": "stagger", "animation": "stagger", "animationSpeed": 1, "blendMode": "Add"}
+  },
+  {
+    "file": "game:shapes/entity/humanoid/seraph-faceless",
+    "op": "add",
+    "path": "/animations/-",
+    "value": {
+      "name": "stagger",
+      "code": "stagger",
+      "quantityframes": 15,
+			"onActivityStopped": "PlayTillEnd",
+			"onAnimationEnd": "EaseOut",
+      "keyframes": [
+        {
+					"frame": 0,
+					"elements": {
+						"UpperTorso": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -10.0 },
+						"UpperArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmR": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"UpperArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 },
+						"LowerArmL": { "rotationX": 0.0, "rotationY": 0.0, "rotationZ": -30.0 }
+					}
+				}
+      ]
+    }
+  }
+]

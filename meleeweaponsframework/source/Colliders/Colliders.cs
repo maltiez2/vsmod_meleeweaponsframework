@@ -40,18 +40,17 @@ public readonly struct LineSegmentCollider : IWeaponCollider
 
         api.Render.RenderLine(playerPos, tail.X, tail.Y, tail.Z, head.X, head.Y, head.Z, color);
     }
-    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityPos origin, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
-        EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return null;
 
-        return TransformSegment(this, modelMatrix, playerPos);
+        return TransformSegment(this, modelMatrix, origin);
     }
-    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    public ICollider Transform(Matrixf modelMatrix, EntityPos origin)
     {
-        Vector3 tail = ColliderTools.TransformVector(Position, modelMatrix, playerPos);
-        Vector3 head = ColliderTools.TransformVector(Direction + Position, modelMatrix, playerPos);
+        Vector3 tail = ColliderTools.TransformVector(Position, modelMatrix, origin);
+        Vector3 head = ColliderTools.TransformVector(Direction + Position, modelMatrix, origin);
 
         return new LineSegmentCollider(tail, head - tail);
     }
@@ -337,20 +336,19 @@ public readonly struct RectangularCollider : IParryCollider
 
         return true;
     }
-    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityPos origin, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
-        EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return null;
 
-        return TransformCollider(this, modelMatrix, playerPos);
+        return TransformCollider(this, modelMatrix, origin);
     }
-    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    public ICollider Transform(Matrixf modelMatrix, EntityPos origin)
     {
-        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, playerPos);
-        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, playerPos);
-        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, playerPos);
-        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, playerPos);
+        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, origin);
+        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, origin);
+        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, origin);
+        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, origin);
 
         return new RectangularCollider(vertexA, vertexB, vertexC, vertexD);
     }
@@ -541,24 +539,23 @@ public readonly struct OctagonalCollider : IParryCollider
 
         return true;
     }
-    public ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
+    public ICollider? Transform(EntityPos origin, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true)
     {
-        EntityPos playerPos = entity.Pos;
         Matrixf? modelMatrix = ColliderTools.GetHeldItemModelMatrix(entity, itemSlot, api, right);
         if (modelMatrix is null) return null;
 
-        return TransformCollider(this, modelMatrix, playerPos);
+        return TransformCollider(this, modelMatrix, origin);
     }
-    public ICollider Transform(Matrixf modelMatrix, EntityPos playerPos)
+    public ICollider Transform(Matrixf modelMatrix, EntityPos origin)
     {
-        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, playerPos);
-        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, playerPos);
-        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, playerPos);
-        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, playerPos);
-        Vector3 vertexE = ColliderTools.TransformVector(VertexE, modelMatrix, playerPos);
-        Vector3 vertexF = ColliderTools.TransformVector(VertexF, modelMatrix, playerPos);
-        Vector3 vertexG = ColliderTools.TransformVector(VertexG, modelMatrix, playerPos);
-        Vector3 vertexH = ColliderTools.TransformVector(VertexH, modelMatrix, playerPos);
+        Vector3 vertexA = ColliderTools.TransformVector(VertexA, modelMatrix, origin);
+        Vector3 vertexB = ColliderTools.TransformVector(VertexB, modelMatrix, origin);
+        Vector3 vertexC = ColliderTools.TransformVector(VertexC, modelMatrix, origin);
+        Vector3 vertexD = ColliderTools.TransformVector(VertexD, modelMatrix, origin);
+        Vector3 vertexE = ColliderTools.TransformVector(VertexE, modelMatrix, origin);
+        Vector3 vertexF = ColliderTools.TransformVector(VertexF, modelMatrix, origin);
+        Vector3 vertexG = ColliderTools.TransformVector(VertexG, modelMatrix, origin);
+        Vector3 vertexH = ColliderTools.TransformVector(VertexH, modelMatrix, origin);
 
         return new OctagonalCollider(vertexA, vertexB, vertexC, vertexD, vertexE, vertexF, vertexG, vertexH);
     }

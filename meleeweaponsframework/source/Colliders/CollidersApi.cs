@@ -9,8 +9,8 @@ namespace MeleeWeaponsFramework;
 public interface ICollider
 {
     void Render(ICoreClientAPI api, EntityAgent entityPlayer, int color = ColorUtil.WhiteArgb);
-    ICollider? Transform(EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true);
-    ICollider Transform(Matrixf modelMatrix, EntityPos playerPos);
+    ICollider? Transform(EntityPos origin, EntityAgent entity, ItemSlot itemSlot, ICoreClientAPI api, bool right = true);
+    ICollider Transform(Matrixf modelMatrix, EntityPos origin);
 }
 
 public interface IHasCollider

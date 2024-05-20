@@ -94,7 +94,7 @@ public class GenericMeleeWeapon : MeleeWeaponItem
 #if DEBUG
         if (Api != null)
         {
-            DebugCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
+            DebugCollider.Transform(byPlayer.Entity.Pos, byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
         }
 #endif
     }

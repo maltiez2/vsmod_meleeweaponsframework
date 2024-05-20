@@ -37,6 +37,7 @@ public class DirectionalWeaponParameters
 
     public int FeintCooldownMs { get; set; } = 600;
     public int BlockCooldownMs { get; set; } = 300;
+    public int StaggerDurationMs { get; set; } = 600;
     public string? BlockSound { get; set; }
     public string? ParrySound { get; set; }
     public string? CancelBlockSound { get; set; }
@@ -122,7 +123,7 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     public virtual DirectionsConfiguration DirectionsType => Grip == GripType.OneHanded ? DirectionsConfigurationOneHanded : DirectionsConfigurationTwoHanded;
     public virtual bool RenderDirectionCursor { get; protected set; } = true;
 
-    public IEnumerable<IParryCollider> RelativeColliders { get; protected set; } = Array.Empty<IParryCollider>();
+    public IEnumerable<IParryCollider> RelativeColliders => ParryCollidersByGrip[Grip];
     public IEnumerable<IParryCollider> InWorldColliders { get; set; } = Array.Empty<IParryCollider>();
 
     public WeaponActivity CurrentMainHandActivity { get; protected set; } = WeaponActivity.Idle;
@@ -155,10 +156,19 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
         FeintCooldown = TimeSpan.FromMilliseconds(DirectionalWeaponParameters.FeintCooldownMs);
         BlockCooldown = TimeSpan.FromMilliseconds(DirectionalWeaponParameters.BlockCooldownMs);
+        StaggerDuration = TimeSpan.FromMilliseconds(DirectionalWeaponParameters.StaggerDurationMs);
 
         DebugCollider = new(DirectionalWeaponParameters.DebugCollider);
         DebugParryColliders = DirectionalWeaponParameters.DebugParryColliders.Select(collider => new RectangularCollider(collider)).ToArray();
 
+        Manager = api.ModLoader.GetModSystem<AnimationManagerLibSystem>();
+        StaggerAnimation = new("stagger", "stagger", EnumAnimationBlendMode.AddAverage, 0);
+        StaggerAnimationParameters = new RunParameters[]
+        {
+            RunParameters.EaseIn(TimeSpan.FromMilliseconds(100), 0, ProgressModifierType.Sin),
+            RunParameters.EaseOut(TimeSpan.FromMilliseconds(300), ProgressModifierType.SinQuadratic)
+        };
+        Manager.Register(StaggerAnimation, AnimationData.Player("stagger"));
     }
     public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
     {
@@ -235,8 +245,11 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 #if DEBUG
         if (Api != null)
         {
-            DebugCollider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity);
-            DebugParryColliders.Foreach(collider => collider.Transform(byPlayer.Entity, inSlot, Api)?.Render(Api, byPlayer.Entity, ColorUtil.ToRgba(255, 255, 0, 0)));
+            foreach (IPlayer player in Api.World.AllOnlinePlayers)
+            {
+                DebugCollider.Transform(byPlayer.Entity.Pos, player.Entity, player.Entity.RightHandItemSlot, Api)?.Render(Api, player.Entity);
+                DebugParryColliders.Foreach(collider => collider.Transform(byPlayer.Entity.Pos, player.Entity, player.Entity.RightHandItemSlot, Api)?.Render(Api, player.Entity, ColorUtil.ToRgba(255, 255, 0, 0)));
+            }
         }
 #endif
     }
@@ -267,7 +280,7 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     protected DirectionsConfiguration DirectionsConfigurationTwoHanded { get; set; } = DirectionsConfiguration.None;
 
     protected LineSegmentCollider DebugCollider { get; set; }
-    protected RectangularCollider[] DebugParryColliders { get; set; }
+    protected RectangularCollider[] DebugParryColliders { get; set; } = Array.Empty<RectangularCollider>();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> AttacksAnimationsTwoHanded { get; set; } = new();
     protected Dictionary<AttackDirection, (PlayerAnimationData animation, RunParameters[] parameters)> ParriesAnimationsOneHanded { get; set; } = new();
@@ -277,16 +290,22 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     protected Dictionary<AttackDirection, AttackId> AttacksTwoHanded { get; set; } = new();
     protected Dictionary<AttackDirection, MeleeBlockId> BlockIdsOneHanded { get; set; } = new();
     protected Dictionary<AttackDirection, MeleeBlockId> BlockIdsTwoHanded { get; set; } = new();
+    protected TimeSpan StaggerDuration { get; set; } = TimeSpan.Zero;
     protected TimeSpan BlockCooldown { get; set; } = TimeSpan.Zero;
     protected TimeSpan FeintCooldown { get; set; } = TimeSpan.Zero;
     protected Dictionary<GripType, IEnumerable<IParryCollider>> ParryCollidersByGrip { get; set; } = new();
     protected DirectionalWeaponParameters DirectionalWeaponParameters { get; private set; } = new();
     protected long CooldownTimer { get; set; } = -1;
     protected long FeintCooldownTimer { get; set; } = -1;
+    protected long StaggerCooldownTimer { get; set; } = -1;
     protected GripType DefaultGrip { get; set; } = GripType.OneHanded;
     protected GripType Grip { get; set; } = GripType.OneHanded;
     protected bool CanParry => Grip == GripType.OneHanded ? ParriesAnimationsOneHanded.Any() : ParriesAnimationsTwoHanded.Any();
     protected bool CanAttack => Grip == GripType.OneHanded ? AttacksAnimationsOneHanded.Any() : AttacksAnimationsTwoHanded.Any();
+
+    protected AnimationId StaggerAnimation;
+    protected RunParameters[] StaggerAnimationParameters;
+    protected AnimationManagerLibSystem Manager;
 
     [ActionEventHandler(EnumEntityAction.LeftMouseDown, ActionState.Active)]
     protected virtual bool OnAttackOneHanded(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
@@ -373,6 +392,26 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     }
     protected virtual void OnAttackCallback(AttackResult result, ItemSlot slot, AttackDirection direction, bool mainHand)
     {
+        if ((result.Result & AttackResultFlag.Parried) != 0)
+        {
+            StopAttack(mainHand);
+            if (DirectionalWeaponParameters.ParrySound != null) Api?.World.PlaySoundAt(new(DirectionalWeaponParameters.ParrySound), Api?.World.Player.Entity);
+            Behavior?.SetState(MeleeWeaponState.Cooldown);
+            StaggerCooldownTimer = Api?.World.RegisterCallback(dt => StaggerCallback(mainHand), (int)StaggerDuration.TotalMilliseconds) ?? -1;
+            Manager.Run(new(Behavior.entity.EntityId, AnimationTargetType.EntityFirstPerson), new(StaggerAnimation, StaggerAnimationParameters));
+            Manager.Run(new(Behavior.entity.EntityId, AnimationTargetType.EntityThirdPerson), new(StaggerAnimation, StaggerAnimationParameters));
+        }
+
+        if ((result.Result & AttackResultFlag.Blocked) != 0)
+        {
+            StopAttack(mainHand);
+            if (DirectionalWeaponParameters.BlockSound != null) Api?.World.PlaySoundAt(new(DirectionalWeaponParameters.BlockSound), Api?.World.Player.Entity);
+            Behavior?.SetState(MeleeWeaponState.Cooldown);
+            StaggerCooldownTimer = Api?.World.RegisterCallback(dt => StaggerCallback(mainHand), (int)BlockCooldown.TotalMilliseconds) ?? -1;
+            Manager.Run(new(Behavior.entity.EntityId, AnimationTargetType.EntityFirstPerson), new(StaggerAnimation, StaggerAnimationParameters));
+            Manager.Run(new(Behavior.entity.EntityId, AnimationTargetType.EntityThirdPerson), new(StaggerAnimation, StaggerAnimationParameters));
+        }
+
         if (result.Result == AttackResultFlag.Finished)
         {
             StopAttack(mainHand);
@@ -548,7 +587,7 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
 
     protected bool CheckIfCanParry(bool mainHand, MeleeWeaponState state)
     {
-        if (FeintCooldownTimer != -1) return false;
+        if (FeintCooldownTimer != -1 || StaggerCooldownTimer != -1) return false;
         if (Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
         if (state == MeleeWeaponState.Cooldown) return false;
 
@@ -559,7 +598,7 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
     }
     protected bool CheckIfCanAttack(bool mainHand, MeleeWeaponState state)
     {
-        if (Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle) return false;
+        if (Behavior?.GetState(mainHand: !mainHand) != MeleeWeaponState.Idle || StaggerCooldownTimer != -1) return false;
         if (state == MeleeWeaponState.Cooldown) return false;
 
         WeaponActivity activity = mainHand ? CurrentMainHandActivity : CurrentOffhandActivity;
@@ -606,6 +645,11 @@ public class DirectionalWeapon : Item, IBehaviorManagedItem, IHasParryCollider
         MeleeWeaponState currentState = Behavior?.GetState(mainHand) ?? MeleeWeaponState.Idle;
         if (currentState == MeleeWeaponState.Cooldown) Behavior?.SetState(MeleeWeaponState.Idle, mainHand);
         CooldownTimer = -1;
+    }
+    protected void StaggerCallback(bool mainHand)
+    {
+        StaggerCooldownTimer = -1;
+        Behavior?.SetState(MeleeWeaponState.Idle);
     }
 
     protected static Dictionary<AttackDirection, MeleeAttackStats> ParseAttacksFromStats(Dictionary<string, DirectionalWeaponAttackStats> attacks, float maxReach)

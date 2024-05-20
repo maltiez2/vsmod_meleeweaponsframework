@@ -3,6 +3,7 @@
   "class": "meleeweaponsframework:training-sword",
   "tool": "sword",
   "attributes": {
+    "fpHandsOffset": 0,
     "melee-weapon-stats": {
       "IdleAnimationOneHanded": "meleeweaponsframework-training-1h-idle",
       "IdleAnimationTwoHanded": "meleeweaponsframework-training-2h-idle",
@@ -10,47 +11,49 @@
       "ReadyAnimationTwoHanded": "meleeweaponsframework-training-2h-ready",
       "DirectionsConfigurationOneHanded": "Triangle",
       "DirectionsConfigurationTwoHanded": "TopBottom",
+      "BlockSound": "sounds/thud",
+      "ParrySound": "sounds/held/shieldblock",
       "VanillaAnimationsNaming": true,
       "CanChangeGrip": true,
       "DebugCollider": [ 0.2, 0, 0.5, 3.3, 0, 0.5 ],
       "DebugParryColliders": [
         [
-          0.2, 0.2, 0.5,
-          0.2, -0.2, 0.5,
+          0.4, 0.2, 0.5,
+          0.4, -0.2, 0.5,
           3.3, -0.2, 0.5,
           3.3, 0.2, 0.5
         ],
         [
-          0.2, 0, 0.3,
-          0.2, 0, 0.7,
+          0.4, 0, 0.3,
+          0.4, 0, 0.7,
           3.3, 0, 0.7,
           3.3, 0, 0.3
         ]
       ],
       "OneHandedParriesColliders": [
         [
-          0.2, 0.2, 0.5,
-          0.2, -0.2, 0.5,
+          0.4, 0.2, 0.5,
+          0.4, -0.2, 0.5,
           3.3, -0.2, 0.5,
           3.3, 0.2, 0.5
         ],
         [
-          0.2, 0, 0.3,
-          0.2, 0, 0.7,
+          0.4, 0, 0.3,
+          0.4, 0, 0.7,
           3.3, 0, 0.7,
           3.3, 0, 0.3
         ]
       ],
       "TwoHandedParriesColliders": [
         [
-          0.2, 0.2, 0.5,
-          0.2, -0.2, 0.5,
+          0.4, 0.2, 0.5,
+          0.4, -0.2, 0.5,
           3.3, -0.2, 0.5,
           3.3, 0.2, 0.5
         ],
         [
-          0.2, 0, 0.3,
-          0.2, 0, 0.7,
+          0.4, 0, 0.3,
+          0.4, 0, 0.7,
           3.3, 0, 0.7,
           3.3, 0, 0.3
         ]

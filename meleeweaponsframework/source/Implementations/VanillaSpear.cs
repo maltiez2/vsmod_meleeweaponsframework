@@ -79,10 +79,10 @@ public class VanillaSpear : GenericMeleeWeapon
 
     protected const float TyronMagicNumber_1 = 0.15f;
 
-    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Active)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Pressed)]
     protected virtual bool OnAim(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != MeleeWeaponState.Idle) return true;
+        if (!mainHand || state != MeleeWeaponState.Idle) return false;
 
         ThrowSystemClient?.Aim();
         AimStartTime = Api?.World.ElapsedMilliseconds ?? 0;
@@ -91,10 +91,10 @@ public class VanillaSpear : GenericMeleeWeapon
         return true;
     }
 
-    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Active)]
+    [ActionEventHandler(EnumEntityAction.RightMouseDown, ActionState.Released)]
     protected virtual bool OnThrow(ItemSlot slot, EntityPlayer player, ref MeleeWeaponState state, ActionEventData eventData, bool mainHand, AttackDirection direction)
     {
-        if (!mainHand || state != MeleeWeaponState.Idle) return true;
+        if (!mainHand || state != MeleeWeaponState.Idle) return false;
 
         long currentTime = Api?.World.ElapsedMilliseconds ?? 0;
         if (currentTime - AimStartTime < SpearParameters.AimMinimumDurationMs)
